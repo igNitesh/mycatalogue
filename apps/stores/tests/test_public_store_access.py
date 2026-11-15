@@ -126,3 +126,31 @@ class TestPublicStoreAccess:
         url = reverse("stores:public_detail", kwargs={"slug": "ghost-store"})
         response = client.get(url)
         assert response.status_code == 404
+
+    def test_public_storefront_does_not_leak_private_merchant_or_store_data(
+        self, client, published_store, active_merchant
+    ):
+        """
+        Tenant isolation & data privacy verification:
+        Ensures internal database UUIDs, exact street addresses, PIN codes,
+        and internal status values are not leaked in the public storefront HTML payload.
+        """
+        url = reverse("stores:public_detail", kwargs={"slug": published_store.slug})
+        response = client.get(url)
+        assert response.status_code == 200
+        content = response.content.decode()
+
+        # Intentionally public fields MUST be present
+        assert published_store.name in content
+        assert published_store.slug in content
+        assert active_merchant.name in content
+        assert active_merchant.city in content
+        assert active_merchant.state in content
+
+        # Sensitive internal identifiers and private tenant data MUST NOT be leaked
+        assert str(published_store.id) not in content
+        assert str(active_merchant.id) not in content
+        assert active_merchant.address not in content
+        assert active_merchant.pin_code not in content
+        assert active_merchant.status not in content
+        assert published_store.status not in content

@@ -6,7 +6,7 @@ from django.http import HttpRequest
 
 from .exceptions import SoleOwnerProtectionError
 from .models import Merchant, MerchantMembership, MerchantOwnershipTransferLog
-from .services import delete_membership
+from .services import admin_delete_membership
 
 
 @admin.register(Merchant)
@@ -35,20 +35,25 @@ class MerchantMembershipAdmin(admin.ModelAdmin):
     actions = None
 
     def delete_model(self, request: HttpRequest, obj: Any) -> None:
-        """Route single deletion through protected service."""
+        """Route single deletion through protected administrative service."""
         try:
-            delete_membership(merchant_id=obj.merchant_id, target_user=obj.user)
+            admin_delete_membership(
+                merchant_id=obj.merchant_id,
+                target_user=obj.user,
+                admin_user=request.user,
+            )
         except SoleOwnerProtectionError as exc:
             self.message_user(request, str(exc), level=messages.ERROR)
             raise ValidationError(str(exc)) from exc
 
     def delete_queryset(self, request: HttpRequest, queryset: Any) -> None:
-        """Route queryset deletion through protected service sequentially."""
+        """Route queryset deletion through protected administrative service sequentially."""
         for membership in queryset:
             try:
-                delete_membership(
+                admin_delete_membership(
                     merchant_id=membership.merchant_id,
                     target_user=membership.user,
+                    admin_user=request.user,
                 )
             except SoleOwnerProtectionError as exc:
                 self.message_user(request, str(exc), level=messages.ERROR)

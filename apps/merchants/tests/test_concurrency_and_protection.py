@@ -99,6 +99,7 @@ class TestConcurrencyAndOwnershipProtection:
         ):
             delete_membership(
                 merchant_id=merchant.id,
+                actor_user=owner_user,
                 target_user=owner_user,
             )
 
