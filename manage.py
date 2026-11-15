@@ -9,17 +9,19 @@ from pathlib import Path
 
 def main() -> None:
     """Run administrative tasks."""
-    # Auto-switch to project virtualenv if running from global Python
-    if sys.prefix == sys.base_prefix:
+    # Auto-switch to project virtualenv if running from global Python on host machine
+    if (
+        not Path("/.dockerenv").exists()
+        and not os.environ.get("DOCKER_CONTAINER")
+        and sys.prefix == sys.base_prefix
+    ):
         base_dir = Path(__file__).resolve().parent
-        venv_python_win = base_dir / ".venv" / "Scripts" / "python.exe"
-        venv_python_nix = base_dir / ".venv" / "bin" / "python"
-        venv_python = (
-            venv_python_win
-            if venv_python_win.exists()
-            else (venv_python_nix if venv_python_nix.exists() else None)
-        )
-        if venv_python:
+        if sys.platform == "win32":
+            venv_python = base_dir / ".venv" / "Scripts" / "python.exe"
+        else:
+            venv_python = base_dir / ".venv" / "bin" / "python"
+
+        if venv_python.exists():
             sys.exit(subprocess.call([str(venv_python)] + sys.argv))
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
