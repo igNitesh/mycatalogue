@@ -12,10 +12,10 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("auth/", include("apps.users.urls", namespace="users")),
     path("", include("apps.core.urls", namespace="core")),
 ]
 
 # Serve media files locally during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

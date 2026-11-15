@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Verification Email Sent | mycatalogue{% endblock %}
+
+{% block content %}
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-sm sm:rounded-xl sm:px-10 border border-slate-200 text-center">
+            <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold mx-auto mb-4 text-xl">
+                ✉
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Check your inbox</h2>
+            <p class="text-sm text-slate-600 mb-6">
+                We have sent an email verification link to <strong class="text-slate-900">{{ email }}</strong>.
+                Please click the link in the email to activate your account.
+            </p>
+            <div class="border-t border-slate-200 pt-6">
+                <p class="text-xs text-slate-500 mb-3">Didn't receive an email?</p>
+                <form method="POST" action="{% url 'users:resend_verification' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <button type="submit" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                        Resend verification link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

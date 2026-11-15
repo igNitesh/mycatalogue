@@ -21,4 +21,3 @@ class CoreConfig(AppConfig):
                 return duplicate
 
             django_context.BaseContext.__copy__ = _base_context_copy
-

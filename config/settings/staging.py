@@ -49,4 +49,3 @@ LOGGING = {
         "level": "INFO",
     },
 }
-

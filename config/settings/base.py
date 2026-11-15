@@ -40,7 +40,20 @@ THIRD_PARTY_APPS: list[str] = []
 
 LOCAL_APPS = [
     "apps.core",
+    "apps.users",
 ]
+
+AUTH_USER_MODEL = "users.User"
+
+AUTHENTICATION_BACKENDS = [
+    "apps.users.backends.CaseInsensitiveEmailBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "core:index"
+LOGOUT_REDIRECT_URL = "users:login"
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 

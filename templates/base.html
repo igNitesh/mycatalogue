@@ -21,25 +21,66 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                        M
-                    </div>
-                    <span class="font-bold text-xl tracking-tight text-slate-900">mycatalogue</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                        Foundation v0.1
-                    </span>
+                    <a href="{% url 'core:index' %}" class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                            M
+                        </div>
+                        <span class="font-bold text-xl tracking-tight text-slate-900">mycatalogue</span>
+                    </a>
                 </div>
                 <nav class="flex items-center space-x-4">
                     <a href="{% url 'core:health_check' %}" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
-                        Health Check (API)
+                        Health API
                     </a>
-                    <a href="/admin/" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
-                        Admin
+                    <a href="{% url 'core:protected' %}" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
+                        Protected Area
                     </a>
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-3 border-l border-slate-200 pl-4">
+                            <span class="text-xs font-mono text-slate-600">
+                                {{ user.email }}
+                            </span>
+                            {% if not user.is_verified %}
+                                <a href="{% url 'users:verification_required' %}" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 hover:bg-amber-200">
+                                    Unverified ⚠
+                                </a>
+                            {% else %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                                    Verified ✓
+                                </span>
+                            {% endif %}
+                            <form method="POST" action="{% url 'users:logout' %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-xs font-medium text-slate-500 hover:text-red-600 transition-colors">
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-3 border-l border-slate-200 pl-4">
+                            <a href="{% url 'users:login' %}" class="text-sm font-medium text-slate-700 hover:text-indigo-600">
+                                Sign In
+                            </a>
+                            <a href="{% url 'users:register' %}" class="btn-primary text-xs py-1.5 px-3">
+                                Register
+                            </a>
+                        </div>
+                    {% endif %}
                 </nav>
             </div>
         </div>
     </header>
+
+    <!-- Flash Messages Container -->
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="p-3 mb-2 rounded-md text-sm border {% if message.tags == 'error' %}bg-red-50 text-red-800 border-red-200{% elif message.tags == 'success' %}bg-emerald-50 text-emerald-800 border-emerald-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border-amber-200{% else %}bg-indigo-50 text-indigo-800 border-indigo-200{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Main Content -->
     <main class="flex-1">
@@ -56,4 +97,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

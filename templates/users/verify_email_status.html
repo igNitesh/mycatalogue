@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | mycatalogue{% endblock %}
+
+{% block content %}
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-sm sm:rounded-xl sm:px-10 border border-slate-200 text-center">
+            {% if success %}
+            <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold mx-auto mb-4 text-xl">
+                &#10003;
+            </div>
+            {% else %}
+            <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold mx-auto mb-4 text-xl">
+                ✕
+            </div>
+            {% endif %}
+
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ title }}</h2>
+            <p class="text-sm text-slate-600 mb-6">
+                {{ message }}
+            </p>
+
+            <div>
+                {% if success %}
+                <a href="{% url 'users:login' %}" class="w-full btn-primary py-2.5 text-sm font-semibold inline-block">
+                    Sign in to your account
+                </a>
+                {% else %}
+                <a href="{% url 'users:verification_required' %}" class="w-full btn-primary py-2.5 text-sm font-semibold inline-block">
+                    Request a new verification link
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

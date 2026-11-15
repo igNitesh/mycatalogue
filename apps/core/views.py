@@ -7,6 +7,8 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render
 from django.views import View
 
+from apps.users.decorators import verified_user_required
+
 
 class HealthCheckView(View):
     """
@@ -46,3 +48,9 @@ class HealthCheckView(View):
 def index_view(request: HttpRequest):
     """Landing page verifying Tailwind CSS and HTMX foundation."""
     return render(request, "core/index.html")
+
+
+@verified_user_required
+def protected_dashboard_view(request: HttpRequest):
+    """Protected storefront area strictly restricted to email-verified users."""
+    return render(request, "core/protected.html")

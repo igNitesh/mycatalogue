@@ -1,2 +1,1 @@
 """mycatalogue configuration package."""
-

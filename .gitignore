@@ -38,6 +38,8 @@ venv.bak/
 # Database
 *.sqlite3
 *.sqlite3-journal
+*.bak
+db.sqlite3*
 
 # Static & Media
 staticfiles/
