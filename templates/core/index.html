@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | mycatalogue{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Hero / Status Banner -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-8">
+        <div class="sm:flex sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    mycatalogue System Foundation
+                </h1>
+                <p class="mt-2 text-base text-slate-600">
+                    Production-ready modular monolith architecture for multi-tenant digital storefronts.
+                </p>
+            </div>
+            <div class="mt-4 sm:mt-0">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+                    <span class="w-2 h-2 mr-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Foundation Active
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Architectural Verification Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Card 1: Stack -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Core Stack</h3>
+            <ul class="space-y-2 text-sm text-slate-700">
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Python 3.12 &amp; Django 5.1</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> PostgreSQL 16</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Docker Compose Engine</li>
+            </ul>
+        </div>
+
+        <!-- Card 2: Frontend Pipeline -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Frontend Pipeline</h3>
+            <ul class="space-y-2 text-sm text-slate-700">
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Tailwind CSS Utility Engine</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> HTMX Progressive Enhancement</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> WhiteNoise Static Manifest</li>
+            </ul>
+        </div>
+
+        <!-- Card 3: Quality & Isolation -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Testing &amp; Security</h3>
+            <ul class="space-y-2 text-sm text-slate-700">
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Pytest &amp; Pytest-Django</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Ruff Formatting &amp; Linter</li>
+                <li class="flex items-center"><span class="text-indigo-600 font-bold mr-2">&#10003;</span> Tenant-isolation ready</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Interactive HTMX Health Check Test -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-lg font-semibold text-slate-900 mb-2">Live Health Probe (HTMX)</h2>
+        <p class="text-sm text-slate-600 mb-4">
+            Click the button below to test asynchronous HTMX polling against the backend health-check endpoint.
+        </p>
+
+        <div class="flex items-center space-x-4">
+            <button
+                hx-get="{% url 'core:health_check' %}"
+                hx-target="#health-result"
+                hx-swap="innerHTML"
+                class="btn-primary"
+            >
+                Probe Health Endpoint
+            </button>
+            <div id="health-result" class="text-sm font-mono text-slate-600 bg-slate-50 border border-slate-200 px-4 py-2 rounded-md">
+                Awaiting probe...
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

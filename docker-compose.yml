@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mycatalogue_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mycatalogue_db}
+      POSTGRES_USER: ${POSTGRES_USER:-mycatalogue_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mycatalogue_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mycatalogue_user} -d ${POSTGRES_DB:-mycatalogue_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - mycatalogue_network
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: mycatalogue_web
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-dev-key-change-in-production}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,web
+      - DATABASE_URL=postgres://${POSTGRES_USER:-mycatalogue_user}:${POSTGRES_PASSWORD:-mycatalogue_password}@db:5432/${POSTGRES_DB:-mycatalogue_db}
+      - AUTO_MIGRATE=true
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mycatalogue_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  mycatalogue_network:
+    driver: bridge

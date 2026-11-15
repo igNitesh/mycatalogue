@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}mycatalogue | Digital Storefront SaaS{% endblock %}</title>
+
+    <!-- Tailwind Compiled Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+
+    <!-- HTMX -->
+    <script src="{% static 'js/vendor/htmx.min.js' %}" defer></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                        M
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-slate-900">mycatalogue</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                        Foundation v0.1
+                    </span>
+                </div>
+                <nav class="flex items-center space-x-4">
+                    <a href="{% url 'core:health_check' %}" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
+                        Health Check (API)
+                    </a>
+                    <a href="/admin/" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
+                        Admin
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-500">
+            &copy; 2026 mycatalogue. All rights reserved. Multi-tenant Digital Storefront SaaS.
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
