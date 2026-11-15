@@ -41,6 +41,7 @@ THIRD_PARTY_APPS: list[str] = []
 LOCAL_APPS = [
     "apps.core",
     "apps.users",
+    "apps.merchants",
 ]
 
 AUTH_USER_MODEL = "users.User"
