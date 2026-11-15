@@ -1,0 +1,1 @@
+"""Stores domain application package."""

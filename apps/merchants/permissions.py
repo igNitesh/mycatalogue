@@ -1,8 +1,10 @@
+from typing import Any
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from .choices import MembershipRole, MembershipStatus, MerchantStatus
-from .models import MerchantMembership
+from .models import Merchant, MerchantMembership
 
 
 class MerchantPermission(models.TextChoices):
@@ -25,6 +27,9 @@ class MerchantPermission(models.TextChoices):
         "OPERATE_STOREFRONT",
         _("Execute operational storefront tasks"),
     )
+    MANAGE_STORE = "MANAGE_STORE", _("Create and update store profile")
+    CHANGE_STORE_SLUG = "CHANGE_STORE_SLUG", _("Change store public slug")
+    PUBLISH_STORE = "PUBLISH_STORE", _("Publish or unpublish store")
 
 
 ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
@@ -39,6 +44,9 @@ ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
         MerchantPermission.VIEW_FULL_FINANCIALS,
         MerchantPermission.VIEW_OPERATIONAL_SALES,
         MerchantPermission.OPERATE_STOREFRONT,
+        MerchantPermission.MANAGE_STORE,
+        MerchantPermission.CHANGE_STORE_SLUG,
+        MerchantPermission.PUBLISH_STORE,
     },
     MembershipRole.ADMIN: {
         MerchantPermission.MANAGE_MANAGERS,
@@ -47,6 +55,9 @@ ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
         MerchantPermission.VIEW_FULL_FINANCIALS,
         MerchantPermission.VIEW_OPERATIONAL_SALES,
         MerchantPermission.OPERATE_STOREFRONT,
+        MerchantPermission.MANAGE_STORE,
+        MerchantPermission.CHANGE_STORE_SLUG,
+        MerchantPermission.PUBLISH_STORE,
     },
     MembershipRole.MANAGER: {
         MerchantPermission.MANAGE_STAFF,
@@ -78,6 +89,8 @@ PENDING_ALLOWED_PERMISSIONS = {
     MerchantPermission.MANAGE_MANAGERS,
     MerchantPermission.MANAGE_STAFF,
     MerchantPermission.TRANSFER_OWNERSHIP,
+    MerchantPermission.MANAGE_STORE,
+    MerchantPermission.CHANGE_STORE_SLUG,
 }
 
 
@@ -130,3 +143,30 @@ def can_perform_merchant_action(
         return permission in PENDING_ALLOWED_PERMISSIONS
 
     return False
+
+
+def has_merchant_permission(
+    user: Any,
+    merchant: Merchant,
+    permission: MerchantPermission,
+) -> bool:
+    """
+    Evaluates whether a user holds an active membership in the specified merchant
+    organization with the capability to perform the requested permission,
+    accounting for both role grants and merchant lifecycle status.
+    """
+    if not user or not user.is_authenticated or not user.is_active:
+        return False
+
+    membership = (
+        merchant.memberships.filter(
+            user=user,
+            status=MembershipStatus.ACTIVE,
+        )
+        .select_related("merchant")
+        .first()
+    )
+    if not membership:
+        return False
+
+    return can_perform_merchant_action(membership, permission)
