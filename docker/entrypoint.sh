@@ -39,3 +39,4 @@ fi
 
 # Execute passed container command
 exec "$@"
+

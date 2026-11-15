@@ -1,1 +1,2 @@
 """Domain applications package."""
+

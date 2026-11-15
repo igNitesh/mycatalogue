@@ -24,3 +24,4 @@ The architecture prioritizes:
 - Server-rendered HTML via Django Templates.
 - HTMX handles dynamic asynchronous updates, partial page replacements, and state transitions without client-side state fragmentation.
 - Tailwind CSS compiled via the Tailwind CLI provides a consistent, mobile-first design system.
+

@@ -102,3 +102,4 @@ jobs:
           SECURE_SSL_REDIRECT: "False"
         run: |
           python manage.py check --deploy --settings=config.settings.production
+

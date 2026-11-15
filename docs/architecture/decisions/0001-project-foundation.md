@@ -27,3 +27,4 @@ We are architecting a multi-tenant Digital Storefront SaaS (`mycatalogue`). The 
 - Fast initial development and low infrastructure cost.
 - Easy on-boarding for developers.
 - Clean foundation ready for future business domains (catalog, merchants, orders, analytics).
+

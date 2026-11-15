@@ -48,3 +48,4 @@ docker-compose down
 # Stop containers and wipe PostgreSQL volume
 docker-compose down -v
 ```
+
