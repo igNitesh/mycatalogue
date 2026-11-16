@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Register Your Business | mycatalogue{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8 text-center sm:text-left">
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Register Your Business
+        </h1>
+        <p class="mt-2 text-sm text-slate-600">
+            Set up your merchant organization on mycatalogue. You will become the primary Owner of this organization.
+        </p>
+    </div>
+
+    <!-- Onboarding Notice Banner -->
+    <div class="rounded-lg bg-indigo-50 border border-indigo-200 p-4 mb-6 text-sm text-indigo-900 flex items-start space-x-3">
+        <div class="flex-shrink-0 text-indigo-500 mt-0.5">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div>
+            <span class="font-semibold text-indigo-950">Pending Verification Status:</span>
+            New businesses start in <strong class="text-indigo-800">Pending Verification</strong> status. You can immediately configure your store profile, settings, and team members. Public storefront publishing activates once administrative verification is complete.
+        </div>
+    </div>
+
+    <!-- Registration Card -->
+    <div class="bg-white shadow-sm rounded-xl border border-slate-200 overflow-hidden">
+        <form
+            method="POST"
+            action="{% url 'merchants:onboarding' %}"
+            class="p-6 sm:p-8 space-y-6"
+            onsubmit="var btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.innerText = 'Registering...'; }"
+        >
+            {% csrf_token %}
+            {{ form.form_token }}
+
+            {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4 border border-red-200">
+                <div class="text-sm text-red-700 space-y-1">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Business Identity -->
+            <div>
+                <h2 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-2 mb-4">
+                    1. Business Identity
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.name.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.business_type.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.business_type.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.business_type }}
+                        {% if form.business_type.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.business_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.description.label }}
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Contact & Operating Address -->
+            <div class="pt-2">
+                <h2 class="text-base font-semibold text-slate-900 border-b border-slate-200 pb-2 mb-4">
+                    2. Contact &amp; Location
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.email.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.contact_number.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.contact_number.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.contact_number }}
+                        {% if form.contact_number.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.contact_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.address.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.address.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.city.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.state.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.state }}
+                        {% if form.state.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="{{ form.pin_code.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                            {{ form.pin_code.label }} <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.pin_code }}
+                        {% if form.pin_code.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ form.pin_code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submission Area -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <a href="{% url 'core:index' %}" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="btn-primary py-2.5 px-6 text-sm font-semibold inline-flex items-center space-x-2"
+                >
+                    <span>Register Business Organization</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
