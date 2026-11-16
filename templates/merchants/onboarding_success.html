@@ -3,11 +3,11 @@
 {% block title %}Registration Complete | mycatalogue{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden text-center p-8 sm:p-10">
+<div class="max-w-2xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden text-center p-6 sm:p-10">
         <!-- Success Checkmark Icon -->
-        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 mb-6">
-            <svg class="h-8 w-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mx-auto flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-emerald-100 mb-5 sm:mb-6">
+            <svg class="h-7 w-7 sm:h-8 sm:w-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
         </div>
@@ -15,17 +15,17 @@
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
             Business Registration Complete!
         </h1>
-        <p class="text-sm text-slate-600 max-w-md mx-auto mb-6">
+        <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto mb-6">
             Your organization <strong class="text-slate-900">{{ merchant.name }}</strong> has been registered successfully.
         </p>
 
         <!-- Status Callout Banner -->
-        <div class="rounded-lg bg-amber-50 border border-amber-200 p-4 text-left text-sm text-amber-900 mb-8 space-y-2">
+        <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-left text-sm text-amber-900 mb-6 sm:mb-8 space-y-2">
             <div class="flex items-center space-x-2">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-200 text-amber-900">
                     {{ merchant.get_status_display }}
                 </span>
-                <span class="font-semibold text-amber-950">Important Notice Regarding Activation</span>
+                <span class="font-semibold text-amber-950 text-xs sm:text-sm">Important Notice Regarding Activation</span>
             </div>
             <p class="text-amber-800 text-xs sm:text-sm">
                 <strong>Registration does not mean commercial activation.</strong> Your business account is in <em>Pending Verification</em> status. While your organization is in this status, store and administrative setup capabilities are unlocked, but public storefront publishing remains deactivated until platform verification is finalized.
@@ -33,34 +33,34 @@
         </div>
 
         <!-- Registered Summary Box -->
-        <div class="border border-slate-100 rounded-lg bg-slate-50 p-6 text-left mb-8">
-            <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+        <div class="border border-slate-100 rounded-xl bg-slate-50 p-5 sm:p-6 text-left mb-6 sm:mb-8">
+            <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
                 Registered Organization Summary
             </h2>
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
                 <div>
                     <dt class="text-xs text-slate-500">Business Name</dt>
-                    <dd class="font-medium text-slate-900">{{ merchant.name }}</dd>
+                    <dd class="font-medium text-slate-900 text-xs sm:text-sm">{{ merchant.name }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-slate-500">Business Type</dt>
-                    <dd class="font-medium text-slate-900">{{ merchant.get_business_type_display }}</dd>
+                    <dd class="font-medium text-slate-900 text-xs sm:text-sm">{{ merchant.get_business_type_display }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-slate-500">Official Email</dt>
-                    <dd class="font-medium text-slate-900">{{ merchant.email }}</dd>
+                    <dd class="font-medium text-slate-900 text-xs sm:text-sm break-all">{{ merchant.email }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-slate-500">Contact Number</dt>
-                    <dd class="font-medium text-slate-900">{{ merchant.contact_number }}</dd>
+                    <dd class="font-medium text-slate-900 text-xs sm:text-sm">{{ merchant.contact_number }}</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-slate-500">Operating Location</dt>
-                    <dd class="font-medium text-slate-900">{{ merchant.city }}, {{ merchant.state }} ({{ merchant.pin_code }})</dd>
+                    <dd class="font-medium text-slate-900 text-xs sm:text-sm">{{ merchant.city }}, {{ merchant.state }} ({{ merchant.pin_code }})</dd>
                 </div>
                 <div>
                     <dt class="text-xs text-slate-500">Your Membership Role</dt>
-                    <dd class="inline-flex items-center font-medium text-emerald-700">
+                    <dd class="inline-flex items-center font-medium text-emerald-700 text-xs sm:text-sm">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
                         {{ membership.get_role_display }} (Active)
                     </dd>
@@ -71,16 +71,16 @@
         <!-- Next Actions -->
         <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             <a
-                href="{% url 'core:index' %}"
-                class="w-full sm:w-auto btn-primary py-2.5 px-6 text-sm font-semibold text-center"
+                href="{% url 'merchants:dashboard' %}"
+                class="w-full sm:w-auto btn-primary py-2.5 px-6 text-sm font-semibold text-center min-h-[44px] flex items-center justify-center"
             >
-                Return to Home
+                Go to Merchant Dashboard
             </a>
             <a
-                href="{% url 'core:protected' %}"
-                class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors text-center"
+                href="{% url 'core:index' %}"
+                class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors text-center min-h-[44px] flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md"
             >
-                View Account Overview
+                Return to Home
             </a>
         </div>
     </div>

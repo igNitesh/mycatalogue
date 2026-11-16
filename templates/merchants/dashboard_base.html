@@ -18,69 +18,132 @@
 <body class="h-full flex flex-col md:flex-row text-slate-800 antialiased" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
     <!-- Mobile Navigation Overlay & Sidebar Drawer -->
-    <div id="mobile-sidebar" class="fixed inset-0 z-40 md:hidden hidden">
-        <div class="fixed inset-0 bg-slate-900 bg-opacity-50 transition-opacity" onclick="toggleMobileSidebar()"></div>
-        <div class="relative flex-1 flex flex-col max-w-xs w-full bg-slate-900 text-slate-100 h-full p-4">
+    <div id="mobile-sidebar" class="fixed inset-0 z-40 md:hidden hidden" role="dialog" aria-modal="true" aria-label="Merchant Navigation Sidebar">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="toggleMobileSidebar()"></div>
+        <div class="relative flex-1 flex flex-col max-w-xs w-full bg-slate-900 text-slate-100 h-full p-4 overflow-y-auto">
             <div class="flex items-center justify-between pb-4 border-b border-slate-800">
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-xs">
                         M
                     </div>
                     <span class="font-bold text-lg text-white">mycatalogue</span>
                 </div>
-                <button type="button" class="text-slate-400 hover:text-white" onclick="toggleMobileSidebar()">
-                    <span class="sr-only">Close sidebar</span>
-                    &times;
+                <button
+                    type="button"
+                    class="p-2 -mr-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
+                    aria-label="Close sidebar navigation"
+                    onclick="toggleMobileSidebar()"
+                >
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                 </button>
             </div>
-            <nav class="mt-4 space-y-1">
-                <a href="{% url 'merchants:dashboard' %}" class="flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-700 text-white">
-                    Overview
+
+            <!-- Mobile Active Merchant Info -->
+            <div class="p-3 my-3 rounded-lg bg-slate-800/80 border border-slate-700/60">
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">
+                    Active Merchant
+                </div>
+                <div class="font-bold text-sm text-white truncate" title="{{ merchant.name }}">
+                    {{ merchant.name }}
+                </div>
+                <div class="text-xs text-slate-300 truncate mt-0.5">
+                    {{ merchant.get_business_type_display }}
+                </div>
+
+                <!-- Organization Switcher in Drawer (for quick mobile access) -->
+                {% if has_multiple_merchants %}
+                <div class="mt-3 pt-3 border-t border-slate-700/60">
+                    <form method="POST" action="{% url 'merchants:switch' %}" class="space-y-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'merchants:dashboard' %}">
+                        <label for="mobile-switch-select" class="block text-[11px] font-medium text-slate-400">Switch Organization:</label>
+                        <select
+                            id="mobile-switch-select"
+                            name="merchant_id"
+                            onchange="this.form.submit()"
+                            class="w-full text-xs bg-slate-900 border border-slate-700 rounded-md py-1.5 px-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                        >
+                            {% for mship in user_memberships %}
+                                <option value="{{ mship.merchant.id }}" {% if mship.merchant.id == merchant.id %}selected{% endif %}>
+                                    {{ mship.merchant.name }} ({{ mship.get_role_display }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1">
+                <a
+                    href="{% url 'merchants:dashboard' %}"
+                    aria-current="page"
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"
+                >
+                    <svg class="mr-3 h-5 w-5 text-indigo-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span>Overview</span>
                 </a>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Store Settings</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Products</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Categories</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Orders</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Customers</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
-                <span class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed">
+                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Settings</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
                 </span>
             </nav>
+
+            <div class="mt-auto pt-4 border-t border-slate-800 space-y-2">
+                <a href="{% url 'merchants:onboarding' %}" class="block text-xs font-medium text-indigo-400 hover:text-indigo-300 py-1.5">
+                    + Add Another Business
+                </a>
+                <a href="{% url 'core:index' %}" class="flex items-center space-x-2 text-xs text-slate-400 hover:text-white transition-colors py-1.5">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span>Back to Public Site</span>
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Desktop Sidebar (Fixed) -->
-    <aside class="hidden md:flex md:w-64 md:flex-col md:inset-y-0 bg-slate-900 text-slate-100 border-r border-slate-800">
+    <aside class="hidden md:flex md:w-64 md:flex-col md:inset-y-0 bg-slate-900 text-slate-100 border-r border-slate-800 flex-shrink-0">
         <div class="flex-1 flex flex-col min-h-0">
             <!-- Brand Logo -->
             <div class="flex items-center h-16 flex-shrink-0 px-4 bg-slate-950 border-b border-slate-800">
-                <a href="{% url 'core:index' %}" class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                <a href="{% url 'core:index' %}" class="flex items-center space-x-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-lg p-1">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-xs">
                         M
                     </div>
-                    <span class="font-bold text-xl tracking-tight text-white">mycatalogue</span>
+                    <span class="font-bold text-lg tracking-tight text-white">mycatalogue</span>
                 </a>
             </div>
 
             <!-- Organization Card in Sidebar -->
             <div class="p-4 border-b border-slate-800 bg-slate-900/60">
-                <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
                     Active Merchant
                 </div>
                 <div class="font-bold text-sm text-white truncate" title="{{ merchant.name }}">
@@ -94,17 +157,21 @@
             <!-- Navigation Links -->
             <nav class="mt-4 flex-1 px-3 space-y-1">
                 <!-- Overview (Functional) -->
-                <a href="{% url 'merchants:dashboard' %}" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-sm">
-                    <svg class="mr-3 h-5 w-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a
+                    href="{% url 'merchants:dashboard' %}"
+                    aria-current="page"
+                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                    <svg class="mr-3 h-5 w-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
-                    Overview
+                    <span>Overview</span>
                 </a>
 
                 <!-- Store Settings (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Store management coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Store management coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         <span>Store Settings</span>
@@ -113,9 +180,9 @@
                 </div>
 
                 <!-- Products (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Product catalog coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Product catalog coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
                         <span>Products</span>
@@ -124,9 +191,9 @@
                 </div>
 
                 <!-- Categories (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Category management coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Category management coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                         </svg>
                         <span>Categories</span>
@@ -135,9 +202,9 @@
                 </div>
 
                 <!-- Orders (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Orders management coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Orders management coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         <span>Orders</span>
@@ -146,9 +213,9 @@
                 </div>
 
                 <!-- Customers (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Customer management coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Customer management coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         <span>Customers</span>
@@ -157,9 +224,9 @@
                 </div>
 
                 <!-- Settings (Disabled) -->
-                <div class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Organization settings coming soon">
+                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Organization settings coming soon">
                     <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -171,8 +238,8 @@
 
             <!-- Bottom Return to Public Site Link -->
             <div class="p-3 border-t border-slate-800 text-xs text-slate-400">
-                <a href="{% url 'core:index' %}" class="flex items-center space-x-2 hover:text-white transition-colors">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{% url 'core:index' %}" class="flex items-center space-x-2 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-1">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     <span>Back to Public Site</span>
@@ -184,39 +251,42 @@
     <!-- Main Workspace Container -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Workspace Header -->
-        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center space-x-3">
+        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-3 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                 <!-- Mobile Menu Button -->
                 <button
+                    id="dashboard-mobile-menu-btn"
                     type="button"
-                    class="md:hidden text-slate-500 hover:text-slate-700 focus:outline-none"
+                    class="md:hidden p-2 -ml-1 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors flex-shrink-0"
+                    aria-expanded="false"
+                    aria-controls="mobile-sidebar"
+                    aria-label="Open sidebar navigation"
                     onclick="toggleMobileSidebar()"
                 >
-                    <span class="sr-only">Open sidebar</span>
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
 
                 <!-- Merchant Name & Status Badge -->
-                <div class="flex items-center space-x-2">
-                    <span class="font-bold text-base sm:text-lg text-slate-900 truncate">
+                <div class="flex items-center space-x-2 min-w-0">
+                    <span class="font-bold text-sm sm:text-base lg:text-lg text-slate-900 truncate max-w-[110px] xs:max-w-[150px] sm:max-w-[200px] md:max-w-xs" title="{{ merchant.name }}">
                         {{ merchant.name }}
                     </span>
                     {% if merchant.status == 'ACTIVE' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
                             Active
                         </span>
                     {% elif merchant.status == 'PENDING' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
-                            Pending Verification
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
+                            Pending
                         </span>
                     {% elif merchant.status == 'SUSPENDED' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">
                             Suspended
                         </span>
                     {% else %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-800">
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-800">
                             {{ merchant.get_status_display }}
                         </span>
                     {% endif %}
@@ -224,11 +294,11 @@
             </div>
 
             <!-- Header Right Actions: Organization Switcher & User Menu -->
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                 <!-- Organization Switcher -->
                 {% if has_multiple_merchants %}
-                <div class="relative">
-                    <form method="POST" action="{% url 'merchants:switch' %}" class="flex items-center space-x-1.5">
+                <div class="relative hidden sm:block">
+                    <form method="POST" action="{% url 'merchants:switch' %}" class="flex items-center">
                         {% csrf_token %}
                         <input type="hidden" name="next" value="{% url 'merchants:dashboard' %}">
                         <label for="switch-merchant-select" class="sr-only">Switch Business</label>
@@ -236,7 +306,7 @@
                             id="switch-merchant-select"
                             name="merchant_id"
                             onchange="this.form.submit()"
-                            class="text-xs bg-slate-50 border border-slate-300 rounded-md py-1.5 px-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium cursor-pointer"
+                            class="text-xs bg-slate-50 border border-slate-300 rounded-md py-1.5 px-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium cursor-pointer max-w-[140px] sm:max-w-[180px] truncate"
                         >
                             {% for mship in user_memberships %}
                                 <option value="{{ mship.merchant.id }}" {% if mship.merchant.id == merchant.id %}selected{% endif %}>
@@ -249,18 +319,21 @@
                 {% endif %}
 
                 <!-- Add Another Business Link -->
-                <a href="{% url 'merchants:onboarding' %}" class="hidden sm:inline-flex text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                <a href="{% url 'merchants:onboarding' %}" class="hidden md:inline-flex text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1.5 py-1">
                     + Add Business
                 </a>
 
                 <!-- User Profile & Sign Out -->
-                <div class="flex items-center space-x-3 border-l border-slate-200 pl-3">
-                    <span class="text-xs text-slate-600 font-mono hidden sm:inline">
+                <div class="flex items-center space-x-2 sm:space-x-3 border-l border-slate-200 pl-2 sm:pl-3">
+                    <span class="text-xs text-slate-600 font-mono hidden lg:inline truncate max-w-[160px]" title="{{ request.user.email }}">
                         {{ request.user.email }}
                     </span>
                     <form method="POST" action="{% url 'users:logout' %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="text-xs font-medium text-slate-500 hover:text-red-600 transition-colors">
+                        <button
+                            type="submit"
+                            class="px-2 py-1 text-xs font-medium text-slate-600 hover:text-red-600 hover:bg-slate-50 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[36px] flex items-center"
+                        >
                             Sign Out
                         </button>
                     </form>
@@ -289,8 +362,16 @@
     <script>
         function toggleMobileSidebar() {
             var sidebar = document.getElementById('mobile-sidebar');
+            var btn = document.getElementById('dashboard-mobile-menu-btn');
             if (sidebar) {
-                sidebar.classList.toggle('hidden');
+                var isHidden = sidebar.classList.contains('hidden');
+                if (isHidden) {
+                    sidebar.classList.remove('hidden');
+                    if (btn) btn.setAttribute('aria-expanded', 'true');
+                } else {
+                    sidebar.classList.add('hidden');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                }
             }
         }
     </script>

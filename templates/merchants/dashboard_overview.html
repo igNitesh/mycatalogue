@@ -6,37 +6,37 @@
 <div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Welcome Section -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6">
         <div class="sm:flex sm:items-center sm:justify-between">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <div class="min-w-0">
+                <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight truncate">
                     Welcome back, {{ request.user.first_name|default:request.user.email }}!
                 </h1>
-                <p class="mt-1 text-sm text-slate-600">
-                    Managing <strong class="text-slate-800">{{ merchant.name }}</strong> as
+                <p class="mt-1 text-xs sm:text-sm text-slate-600">
+                    Managing <strong class="text-slate-800 font-semibold">{{ merchant.name }}</strong> as
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700">
                         {{ membership.get_role_display }}
                     </span>
                 </p>
             </div>
-            <div class="mt-4 sm:mt-0 flex items-center space-x-2">
+            <div class="mt-3 sm:mt-0 flex items-center space-x-2 flex-shrink-0">
                 <span class="text-xs text-slate-400 font-medium">Account Status:</span>
                 {% if merchant.status == 'ACTIVE' %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                        <span class="w-2 h-2 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                        <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         Active
                     </span>
                 {% elif merchant.status == 'PENDING' %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                        <span class="w-2 h-2 mr-1.5 rounded-full bg-amber-500"></span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                        <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-500"></span>
                         Pending Verification
                     </span>
                 {% elif merchant.status == 'SUSPENDED' %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                         Suspended
                     </span>
                 {% else %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
                         {{ merchant.get_status_display }}
                     </span>
                 {% endif %}
@@ -46,72 +46,72 @@
 
     <!-- Merchant Lifecycle Status Banners -->
     {% if merchant.status == 'PENDING' %}
-    <div class="rounded-xl bg-amber-50 border border-amber-200 p-5 text-sm text-amber-900 space-y-3">
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 sm:p-5 text-sm text-amber-900 space-y-3">
         <div class="flex items-center space-x-2">
-            <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
             </svg>
-            <h2 class="font-bold text-amber-950 text-base">Setup &amp; Verification Guidance</h2>
+            <h2 class="font-bold text-amber-950 text-sm sm:text-base">Setup &amp; Verification Guidance</h2>
         </div>
-        <p class="text-amber-800">
+        <p class="text-amber-800 text-xs sm:text-sm">
             Your business account is currently in <strong>Pending Verification</strong> status. Store configuration and settings management are unlocked; public storefront publishing will activate once verification is complete.
         </p>
 
         <!-- Onboarding Progress Checklist -->
-        <div class="bg-white/80 rounded-lg p-4 border border-amber-200/60 mt-3">
+        <div class="bg-white/80 rounded-lg p-3 sm:p-4 border border-amber-200/60 mt-2">
             <h3 class="text-xs font-semibold uppercase tracking-wider text-amber-900 mb-2">Setup Checklist</h3>
             <ul class="space-y-2 text-xs sm:text-sm">
                 <li class="flex items-center text-emerald-800 font-medium">
-                    <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mr-2 text-xs font-bold">&#10003;</span>
-                    Business Organization Registered
+                    <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mr-2 text-xs font-bold flex-shrink-0">&#10003;</span>
+                    <span>Business Organization Registered</span>
                 </li>
                 <li class="flex items-center {% if store %}text-emerald-800 font-medium{% else %}text-slate-600{% endif %}">
                     {% if store %}
-                        <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mr-2 text-xs font-bold">&#10003;</span>
-                        Digital Storefront Configured ({{ store.name }})
+                        <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mr-2 text-xs font-bold flex-shrink-0">&#10003;</span>
+                        <span>Digital Storefront Configured ({{ store.name }})</span>
                     {% else %}
-                        <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center mr-2 text-xs font-bold">2</span>
-                        Digital Storefront Configuration (Available in Store Management)
+                        <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center mr-2 text-xs font-bold flex-shrink-0">2</span>
+                        <span>Digital Storefront Configuration (Available in Store Management)</span>
                     {% endif %}
                 </li>
                 <li class="flex items-center text-slate-600">
-                    <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center mr-2 text-xs font-bold">&#9679;</span>
-                    Commercial Platform Verification (In Progress)
+                    <span class="w-4 h-4 rounded-full bg-amber-200 text-amber-800 flex items-center justify-center mr-2 text-xs font-bold flex-shrink-0">&#9679;</span>
+                    <span>Commercial Platform Verification (In Progress)</span>
                 </li>
             </ul>
         </div>
     </div>
     {% elif merchant.status == 'ACTIVE' %}
-    <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-5 text-sm text-emerald-900 flex items-center space-x-3">
-        <svg class="h-6 w-6 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 sm:p-5 text-sm text-emerald-900 flex items-center space-x-3">
+        <svg class="h-6 w-6 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-            <h2 class="font-bold text-emerald-950">Active Operational Standing</h2>
+            <h2 class="font-bold text-emerald-950 text-sm sm:text-base">Active Operational Standing</h2>
             <p class="text-emerald-800 text-xs sm:text-sm mt-0.5">
                 Your business organization is fully verified and active.
             </p>
         </div>
     </div>
     {% elif merchant.status == 'SUSPENDED' %}
-    <div class="rounded-xl bg-red-50 border border-red-200 p-5 text-sm text-red-900 flex items-start space-x-3">
-        <svg class="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="rounded-xl bg-red-50 border border-red-200 p-4 sm:p-5 text-sm text-red-900 flex items-start space-x-3">
+        <svg class="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
         <div>
-            <h2 class="font-bold text-red-950">Account Suspended</h2>
+            <h2 class="font-bold text-red-950 text-sm sm:text-base">Account Suspended</h2>
             <p class="text-red-800 text-xs sm:text-sm mt-1">
                 Your business account is currently suspended. Some features are unavailable. Please contact platform support for assistance.
             </p>
         </div>
     </div>
     {% elif merchant.status == 'INACTIVE' %}
-    <div class="rounded-xl bg-slate-100 border border-slate-300 p-5 text-sm text-slate-800 flex items-start space-x-3">
-        <svg class="h-6 w-6 text-slate-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="rounded-xl bg-slate-100 border border-slate-300 p-4 sm:p-5 text-sm text-slate-800 flex items-start space-x-3">
+        <svg class="h-6 w-6 text-slate-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
         </svg>
         <div>
-            <h2 class="font-bold text-slate-900">Account Inactive</h2>
+            <h2 class="font-bold text-slate-900 text-sm sm:text-base">Account Inactive</h2>
             <p class="text-slate-700 text-xs sm:text-sm mt-1">
                 This business organization is currently inactive. Operational features are disabled.
             </p>
@@ -123,120 +123,125 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Card 1: Business Identity & Contact -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">
-                Organization Details
-            </h2>
-            <dl class="space-y-3 text-sm">
-                <div class="flex justify-between py-1 border-b border-slate-50">
-                    <dt class="text-slate-500">Business Name</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.name }}</dd>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-50">
-                    <dt class="text-slate-500">Business Type</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.get_business_type_display }}</dd>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-50">
-                    <dt class="text-slate-500">Official Email</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.email }}</dd>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-50">
-                    <dt class="text-slate-500">Contact Number</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.contact_number }}</dd>
-                </div>
-                <div class="flex justify-between py-1 border-b border-slate-50">
-                    <dt class="text-slate-500">Operating Address</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.address }}</dd>
-                </div>
-                <div class="flex justify-between py-1">
-                    <dt class="text-slate-500">Location</dt>
-                    <dd class="font-medium text-slate-900 text-right">{{ merchant.city }}, {{ merchant.state }} ({{ merchant.pin_code }})</dd>
-                </div>
-            </dl>
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm sm:text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-3">
+                    Organization Details
+                </h2>
+                <dl class="space-y-1">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 border-b border-slate-50 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Business Name</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right break-words min-w-0">{{ merchant.name }}</dd>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 border-b border-slate-50 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Business Type</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right">{{ merchant.get_business_type_display }}</dd>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 border-b border-slate-50 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Official Email</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right break-all min-w-0">{{ merchant.email }}</dd>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 border-b border-slate-50 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Contact Number</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right">{{ merchant.contact_number }}</dd>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 border-b border-slate-50 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Operating Address</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right break-words min-w-0">{{ merchant.address }}</dd>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline py-1.5 gap-1 sm:gap-4">
+                        <dt class="text-xs sm:text-sm text-slate-500 flex-shrink-0">Location</dt>
+                        <dd class="font-medium text-slate-900 text-xs sm:text-sm text-left sm:text-right">{{ merchant.city }}, {{ merchant.state }} ({{ merchant.pin_code }})</dd>
+                    </div>
+                </dl>
+            </div>
         </div>
 
         <!-- Card 2: Storefront Status -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-4">
-                Digital Storefront Status
-            </h2>
+        <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm sm:text-base font-semibold text-slate-900 border-b border-slate-100 pb-3 mb-3">
+                    Digital Storefront Status
+                </h2>
 
-            {% if store %}
-                <!-- Store Exists -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-bold text-lg text-slate-900">{{ store.name }}</div>
-                            <div class="text-xs text-slate-500 font-mono mt-0.5">/s/{{ store.slug }}/</div>
+                {% if store %}
+                    <!-- Store Exists -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="font-bold text-base sm:text-lg text-slate-900 truncate">{{ store.name }}</div>
+                                <div class="text-xs text-slate-500 font-mono mt-0.5 truncate">/s/{{ store.slug }}/</div>
+                            </div>
+                            <div class="flex-shrink-0">
+                                {% if store.status == 'PUBLISHED' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                        Published
+                                    </span>
+                                {% elif store.status == 'DRAFT' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
+                                        Draft
+                                    </span>
+                                {% elif store.status == 'UNPUBLISHED' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                        Unpublished
+                                    </span>
+                                {% elif store.status == 'SUSPENDED' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                        Suspended
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
+                                        {{ store.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div>
-                            {% if store.status == 'PUBLISHED' %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-                                    Published
-                                </span>
-                            {% elif store.status == 'DRAFT' %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
-                                    Draft
-                                </span>
-                            {% elif store.status == 'UNPUBLISHED' %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
-                                    Unpublished
-                                </span>
-                            {% elif store.status == 'SUSPENDED' %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                                    Suspended
-                                </span>
+
+                        {% if store.description %}
+                        <p class="text-xs text-slate-600 line-clamp-2">
+                            {{ store.description }}
+                        </p>
+                        {% endif %}
+
+                        <!-- Public Link Verification -->
+                        <div class="pt-3 border-t border-slate-100">
+                            {% if store.is_publicly_accessible %}
+                                <a
+                                    href="{{ store.get_absolute_url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0.5"
+                                >
+                                    <span>View Public Storefront</span>
+                                    <svg class="ml-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                </a>
                             {% else %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
-                                    {{ store.get_status_display }}
-                                </span>
+                                <div class="text-xs text-slate-500 flex items-center space-x-1.5">
+                                    <svg class="h-4 w-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                    </svg>
+                                    <span>Public storefront is offline (requires published store and active merchant).</span>
+                                </div>
                             {% endif %}
                         </div>
                     </div>
-
-                    {% if store.description %}
-                    <p class="text-xs text-slate-600 line-clamp-2">
-                        {{ store.description }}
-                    </p>
-                    {% endif %}
-
-                    <!-- Public Link Verification -->
-                    <div class="pt-3 border-t border-slate-100">
-                        {% if store.is_publicly_accessible %}
-                            <a
-                                href="{{ store.get_absolute_url }}"
-                                target="_blank"
-                                class="inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-                            >
-                                <span>View Public Storefront</span>
-                                <svg class="ml-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                            </a>
-                        {% else %}
-                            <div class="text-xs text-slate-500 flex items-center space-x-1.5">
-                                <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                                </svg>
-                                <span>Public storefront is offline (requires published store and active merchant).</span>
-                            </div>
-                        {% endif %}
+                {% else %}
+                    <!-- Store Absent: Clean Empty State -->
+                    <div class="text-center py-6">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-slate-100 text-slate-400 mb-3">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-900 mb-1">No Storefront Created Yet</h3>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                            You have not created a digital storefront for this business organization. Storefront setup will be available in Store Management.
+                        </p>
                     </div>
-                </div>
-            {% else %}
-                <!-- Store Absent: Clean Empty State -->
-                <div class="text-center py-6">
-                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-slate-100 text-slate-400 mb-3">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                    </div>
-                    <h3 class="text-sm font-semibold text-slate-900 mb-1">No Storefront Created Yet</h3>
-                    <p class="text-xs text-slate-500 max-w-sm mx-auto">
-                        You have not created a digital storefront for this business organization. Storefront setup will be available in Store Management.
-                    </p>
-                </div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
