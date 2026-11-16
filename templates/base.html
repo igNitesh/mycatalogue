@@ -37,6 +37,9 @@
                     </a>
                     {% if user.is_authenticated and user.is_verified %}
                         {% if request.merchant or user.merchant_memberships.exists %}
+                            <a href="{% url 'merchants:dashboard' %}" class="text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
+                                Dashboard
+                            </a>
                             <a href="{% url 'merchants:onboarding' %}" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
                                 Add another business
                             </a>

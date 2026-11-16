@@ -12,7 +12,7 @@ from django.views import View
 from apps.users.decorators import VerifiedUserRequiredMixin
 
 from .choices import MembershipRole, MembershipStatus
-from .context import set_active_merchant
+from .context import get_user_merchant_memberships, set_active_merchant
 from .exceptions import InvalidMerchantSelectionError
 from .forms import MerchantOnboardingForm
 from .models import MerchantMembership
@@ -207,5 +207,72 @@ class MerchantOnboardingSuccessView(LoginRequiredMixin, VerifiedUserRequiredMixi
             {
                 "merchant": membership.merchant,
                 "membership": membership,
+            },
+        )
+
+
+class MerchantDashboardView(LoginRequiredMixin, VerifiedUserRequiredMixin, View):
+    """
+    Main workspace landing view for the active merchant organization.
+
+    Access & Lifecycle Rules:
+    - User must be authenticated and email-verified.
+    - Resolves active memberships via get_user_merchant_memberships(request.user).
+    - If 0 active memberships: redirects to 'merchants:onboarding'.
+    - If >1 active memberships and request.merchant is None:
+        renders 'merchants/dashboard_select.html' to let user choose organization.
+    - If valid active merchant established (either auto-resolved for 1 membership,
+      or resolved from session):
+        renders 'merchants/dashboard_overview.html'.
+    - Checks store existence defensively via hasattr/getattr.
+    - Respects merchant lifecycle permissions and uses neutral suspension messaging.
+    """
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        active_memberships = get_user_merchant_memberships(request.user)
+        membership_count = active_memberships.count()
+
+        # 1. User with no merchant memberships -> redirect to onboarding
+        if membership_count == 0:
+            messages.info(
+                request,
+                _(
+                    "You do not belong to any business organization yet. "
+                    "Please register your business to access the workspace."
+                ),
+            )
+            return redirect("merchants:onboarding")
+
+        # 2. User with multiple memberships and no active selection -> show organization selector
+        if not request.merchant or not request.membership:
+            return render(
+                request,
+                "merchants/dashboard_select.html",
+                {
+                    "memberships": active_memberships,
+                },
+            )
+
+        # 3. Valid merchant context established
+        merchant = request.merchant
+        membership = request.membership
+
+        # Resolve store safely
+        store = getattr(merchant, "store", None)
+        if store is not None:
+            try:
+                bool(store.pk)
+            except Exception:
+                store = None
+
+        return render(
+            request,
+            "merchants/dashboard_overview.html",
+            {
+                "merchant": merchant,
+                "membership": membership,
+                "store": store,
+                "user_memberships": active_memberships,
+                "has_multiple_merchants": membership_count > 1,
             },
         )
