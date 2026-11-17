@@ -80,26 +80,40 @@
             <nav class="space-y-1">
                 <a
                     href="{% url 'merchants:dashboard' %}"
-                    aria-current="page"
-                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"
+                    {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"{% else %}class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white min-h-[44px] transition-colors"{% endif %}
                 >
-                    <svg class="mr-3 h-5 w-5 text-indigo-200 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.url_name == 'dashboard' %}text-indigo-200{% else %}text-slate-400{% endif %} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span>Overview</span>
                 </a>
-                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
+                <a
+                    href="{% url 'merchants:store_settings' %}"
+                    {% if request.resolver_match.url_name == 'store_settings' %}aria-current="page" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"{% else %}class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white min-h-[44px] transition-colors"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.url_name == 'store_settings' %}text-indigo-200{% else %}text-slate-400{% endif %} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                     <span>Store Settings</span>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </span>
-                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
+                </a>
+                <a
+                    href="{% url 'products:overview' %}"
+                    {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name != 'category_list' and request.resolver_match.url_name != 'category_create' and request.resolver_match.url_name != 'category_edit' %}aria-current="page" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"{% else %}class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white min-h-[44px] transition-colors"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name != 'category_list' and request.resolver_match.url_name != 'category_create' and request.resolver_match.url_name != 'category_edit' %}text-indigo-200{% else %}text-slate-400{% endif %} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
                     <span>Products</span>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </span>
-                <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
+                </a>
+                <a
+                    href="{% url 'products:category_list' %}"
+                    {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name in 'category_list category_create category_edit' %}aria-current="page" class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md bg-indigo-600 text-white min-h-[44px]"{% else %}class="flex items-center px-3 py-2.5 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white min-h-[44px] transition-colors"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name in 'category_list category_create category_edit' %}text-indigo-200{% else %}text-slate-400{% endif %} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
                     <span>Categories</span>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </span>
+                </a>
                 <span aria-disabled="true" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none">
                     <span>Orders</span>
                     <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
@@ -159,47 +173,46 @@
                 <!-- Overview (Functional) -->
                 <a
                     href="{% url 'merchants:dashboard' %}"
-                    aria-current="page"
-                    class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"{% else %}class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"{% endif %}
                 >
-                    <svg class="mr-3 h-5 w-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.url_name == 'dashboard' %}text-indigo-200{% else %}text-slate-400 group-hover:text-slate-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span>Overview</span>
                 </a>
 
-                <!-- Store Settings (Disabled) -->
-                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Store management coming soon">
-                    <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <span>Store Settings</span>
-                    </div>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </div>
+                <!-- Store Settings (Functional) -->
+                <a
+                    href="{% url 'merchants:store_settings' %}"
+                    {% if request.resolver_match.url_name == 'store_settings' %}aria-current="page" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"{% else %}class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.url_name == 'store_settings' %}text-indigo-200{% else %}text-slate-400 group-hover:text-slate-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <span>Store Settings</span>
+                </a>
 
-                <!-- Products (Disabled) -->
-                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Product catalog coming soon">
-                    <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                        <span>Products</span>
-                    </div>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </div>
+                <!-- Products -->
+                <a
+                    href="{% url 'products:overview' %}"
+                    {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name != 'category_list' and request.resolver_match.url_name != 'category_create' and request.resolver_match.url_name != 'category_edit' %}aria-current="page" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"{% else %}class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name != 'category_list' and request.resolver_match.url_name != 'category_create' and request.resolver_match.url_name != 'category_edit' %}text-indigo-200{% else %}text-slate-400 group-hover:text-slate-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <span>Products</span>
+                </a>
 
-                <!-- Categories (Disabled) -->
-                <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Category management coming soon">
-                    <div class="flex items-center">
-                        <svg class="mr-3 h-5 w-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                        <span>Categories</span>
-                    </div>
-                    <span class="text-xs bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">Soon</span>
-                </div>
+                <!-- Categories -->
+                <a
+                    href="{% url 'products:category_list' %}"
+                    {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name in 'category_list category_create category_edit' %}aria-current="page" class="group flex items-center px-3 py-2 text-sm font-medium rounded-md bg-indigo-600 text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"{% else %}class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"{% endif %}
+                >
+                    <svg class="mr-3 h-5 w-5 {% if request.resolver_match.app_name == 'products' and request.resolver_match.url_name in 'category_list category_create category_edit' %}text-indigo-200{% else %}text-slate-400 group-hover:text-slate-300{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span>Categories</span>
+                </a>
 
                 <!-- Orders (Disabled) -->
                 <div aria-disabled="true" class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-slate-500 cursor-not-allowed select-none opacity-60" title="Orders management coming soon">

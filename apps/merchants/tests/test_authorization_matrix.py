@@ -64,12 +64,14 @@ class TestAuthorizationMatrix:
         assert has_role_permission(MembershipRole.OWNER, MerchantPermission.TRANSFER_OWNERSHIP)
         assert has_role_permission(MembershipRole.OWNER, MerchantPermission.MANAGE_BILLING)
         assert has_role_permission(MembershipRole.OWNER, MerchantPermission.VIEW_FULL_FINANCIALS)
+        assert has_role_permission(MembershipRole.OWNER, MerchantPermission.MANAGE_CATALOGUE)
 
         # ADMIN
         assert not has_role_permission(MembershipRole.ADMIN, MerchantPermission.TRANSFER_OWNERSHIP)
         assert not has_role_permission(MembershipRole.ADMIN, MerchantPermission.MANAGE_BILLING)
         assert has_role_permission(MembershipRole.ADMIN, MerchantPermission.VIEW_FULL_FINANCIALS)
         assert has_role_permission(MembershipRole.ADMIN, MerchantPermission.MANAGE_MANAGERS)
+        assert has_role_permission(MembershipRole.ADMIN, MerchantPermission.MANAGE_CATALOGUE)
 
         # MANAGER - limited financials (shift totals only)
         assert has_role_permission(
@@ -80,9 +82,11 @@ class TestAuthorizationMatrix:
         )
         assert not has_role_permission(MembershipRole.MANAGER, MerchantPermission.MANAGE_MANAGERS)
         assert has_role_permission(MembershipRole.MANAGER, MerchantPermission.MANAGE_STAFF)
+        assert has_role_permission(MembershipRole.MANAGER, MerchantPermission.MANAGE_CATALOGUE)
 
         # STAFF - storefront operations only
         assert has_role_permission(MembershipRole.STAFF, MerchantPermission.OPERATE_STOREFRONT)
+        assert not has_role_permission(MembershipRole.STAFF, MerchantPermission.MANAGE_CATALOGUE)
         assert not has_role_permission(
             MembershipRole.STAFF, MerchantPermission.VIEW_OPERATIONAL_SALES
         )

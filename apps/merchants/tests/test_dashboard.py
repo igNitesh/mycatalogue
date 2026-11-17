@@ -380,9 +380,12 @@ class TestDashboardNavigationAndSidebarRestrictions:
         assert 'href="/merchants/dashboard/"' in content
         assert "Overview" in content
 
-        # Other entries are present but visibly disabled with Soon badges
+        # Store Settings link is active in Task 008
+        assert 'href="/merchants/store/"' in content
+        assert "Store Settings" in content
+
+        # Remaining upcoming modules are visibly disabled with Soon badges
         for disabled_entry in [
-            "Store Settings",
             "Products",
             "Categories",
             "Orders",

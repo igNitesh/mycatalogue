@@ -30,6 +30,7 @@ class MerchantPermission(models.TextChoices):
     MANAGE_STORE = "MANAGE_STORE", _("Create and update store profile")
     CHANGE_STORE_SLUG = "CHANGE_STORE_SLUG", _("Change store public slug")
     PUBLISH_STORE = "PUBLISH_STORE", _("Publish or unpublish store")
+    MANAGE_CATALOGUE = "MANAGE_CATALOGUE", _("Manage products and categories")
 
 
 ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
@@ -47,6 +48,7 @@ ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
         MerchantPermission.MANAGE_STORE,
         MerchantPermission.CHANGE_STORE_SLUG,
         MerchantPermission.PUBLISH_STORE,
+        MerchantPermission.MANAGE_CATALOGUE,
     },
     MembershipRole.ADMIN: {
         MerchantPermission.MANAGE_MANAGERS,
@@ -58,11 +60,13 @@ ROLE_PERMISSIONS: dict[str, set[MerchantPermission]] = {
         MerchantPermission.MANAGE_STORE,
         MerchantPermission.CHANGE_STORE_SLUG,
         MerchantPermission.PUBLISH_STORE,
+        MerchantPermission.MANAGE_CATALOGUE,
     },
     MembershipRole.MANAGER: {
         MerchantPermission.MANAGE_STAFF,
         MerchantPermission.VIEW_OPERATIONAL_SALES,  # Limited to shift totals
         MerchantPermission.OPERATE_STOREFRONT,
+        MerchantPermission.MANAGE_CATALOGUE,
     },
     MembershipRole.STAFF: {
         MerchantPermission.OPERATE_STOREFRONT,
@@ -91,6 +95,7 @@ PENDING_ALLOWED_PERMISSIONS = {
     MerchantPermission.TRANSFER_OWNERSHIP,
     MerchantPermission.MANAGE_STORE,
     MerchantPermission.CHANGE_STORE_SLUG,
+    MerchantPermission.MANAGE_CATALOGUE,
 }
 
 

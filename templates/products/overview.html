@@ -1,0 +1,343 @@
+{% extends "merchants/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Catalogue Overview | {{ merchant.name }} | mycatalogue{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Product Catalogue</h1>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                    {{ merchant.name }}
+                </span>
+            </div>
+            <p class="mt-1 text-sm text-slate-500">
+                Manage your products, categories, pricing, and digital catalogue availability.
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a
+                href="{% url 'products:category_list' %}"
+                class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs min-h-[38px] transition-colors"
+            >
+                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>Categories</span>
+            </a>
+            <a
+                href="{% url 'products:product_create' %}"
+                class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs min-h-[38px] transition-colors"
+            >
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Product</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Storefront Readiness Banner -->
+    {% if storefront_status.has_store and storefront_status.is_published and storefront_status.is_publicly_accessible %}
+    <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center space-x-3">
+            <span class="flex h-3 w-3 relative flex-shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <div class="text-xs text-emerald-900">
+                <span class="font-semibold text-emerald-950">Storefront is Live:</span>
+                Published items are currently visible to customers at
+                <a href="{{ storefront_status.store_url }}" target="_blank" rel="noopener noreferrer" class="font-mono underline font-medium hover:text-emerald-700">
+                    {{ storefront_status.store_url }}
+                </a>
+            </div>
+        </div>
+        <a
+            href="{{ storefront_status.store_url }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center text-xs font-semibold text-emerald-800 hover:text-emerald-950 bg-white/80 hover:bg-white px-3 py-1.5 rounded-lg border border-emerald-200 shadow-xs transition-colors self-start sm:self-auto"
+        >
+            <span>View Public Store</span>
+            <svg class="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+        </a>
+    </div>
+    {% elif storefront_status.has_store %}
+    <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-start sm:items-center space-x-3">
+            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-amber-900">
+                <span class="font-semibold">Store Not Yet Published:</span>
+                Your store is currently in draft status. Customers cannot view your catalogue until you publish your store in Store Settings.
+            </div>
+        </div>
+        <a
+            href="{% url 'merchants:store_settings' %}"
+            class="text-xs font-semibold text-amber-800 hover:text-amber-950 underline self-start sm:self-auto flex-shrink-0"
+        >
+            Manage Store Settings &rarr;
+        </a>
+    </div>
+    {% else %}
+    <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-start sm:items-center space-x-3">
+            <svg class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <div class="text-xs text-indigo-900">
+                <span class="font-semibold">Create your Store:</span>
+                Add products now, and set up your public storefront URL and branding when you're ready.
+            </div>
+        </div>
+        <a
+            href="{% url 'merchants:store_settings' %}"
+            class="text-xs font-semibold text-indigo-700 hover:text-indigo-900 underline self-start sm:self-auto flex-shrink-0"
+        >
+            Create Store &rarr;
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <!-- Total Active Products -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider">Active Products</div>
+            <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-slate-900">{{ summary.total_products }}</span>
+                <span class="text-xs text-slate-400 font-medium">Published + Draft</span>
+            </div>
+        </div>
+
+        <!-- Published Products -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+            <div class="text-xs font-medium text-emerald-600 uppercase tracking-wider flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+                Published
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-slate-900">{{ summary.published_products }}</span>
+                <span class="text-xs text-emerald-600 font-medium">Live</span>
+            </div>
+        </div>
+
+        <!-- Draft Products -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+            <div class="text-xs font-medium text-amber-600 uppercase tracking-wider flex items-center">
+                <span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span>
+                Drafts
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-slate-900">{{ summary.draft_products }}</span>
+                <span class="text-xs text-slate-400 font-medium">Hidden</span>
+            </div>
+        </div>
+
+        <!-- Archived Products -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider flex items-center">
+                <span class="w-2 h-2 rounded-full bg-slate-400 mr-1.5"></span>
+                Archived
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-slate-700">{{ summary.archived_products }}</span>
+                <a href="{% url 'products:product_list' %}?status=ARCHIVED" class="text-xs text-indigo-600 hover:underline">View</a>
+            </div>
+        </div>
+
+        <!-- Total Categories -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
+            <div class="text-xs font-medium text-indigo-600 uppercase tracking-wider flex items-center">
+                <span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5"></span>
+                Categories
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+                <span class="text-2xl font-bold text-slate-900">{{ summary.total_categories }}</span>
+                <a href="{% url 'products:category_list' %}" class="text-xs text-indigo-600 hover:underline">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation / Overview Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a
+            href="{% url 'products:product_list' %}"
+            class="group p-4 bg-white rounded-xl border border-slate-200 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all flex items-start space-x-3"
+        >
+            <div class="p-2.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+            </div>
+            <div>
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    Browse All Products
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5">
+                    Search, filter, edit prices, manage gallery images, and archive items.
+                </div>
+            </div>
+        </a>
+
+        <a
+            href="{% url 'products:category_list' %}"
+            class="group p-4 bg-white rounded-xl border border-slate-200 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all flex items-start space-x-3"
+        >
+            <div class="p-2.5 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+            </div>
+            <div>
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                    Organize Categories
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5">
+                    Group products into collections and adjust display ordering.
+                </div>
+            </div>
+        </a>
+
+        <a
+            href="{% url 'products:product_create' %}"
+            class="group p-4 bg-white rounded-xl border border-slate-200 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all flex items-start space-x-3"
+        >
+            <div class="p-2.5 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+            </div>
+            <div>
+                <div class="text-sm font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    Add New Product
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5">
+                    Create item descriptions, add pricing, tags, and custom attributes.
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Products Table Section -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h2 class="text-base font-semibold text-slate-900">Recently Added Products</h2>
+            <a href="{% url 'products:product_list' %}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                View all &rarr;
+            </a>
+        </div>
+
+        {% if recent_products %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="py-3 pl-4 pr-3 sm:pl-6">Product</th>
+                        <th scope="col" class="px-3 py-3">Categories</th>
+                        <th scope="col" class="px-3 py-3">Price</th>
+                        <th scope="col" class="px-3 py-3">Status</th>
+                        <th scope="col" class="relative py-3 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 bg-white">
+                    {% for p in recent_products %}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="whitespace-nowrap py-3.5 pl-4 pr-3 sm:pl-6">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                    {% if p.images.all %}
+                                        <img class="h-full w-full object-cover" src="{{ p.images.first.image.url }}" alt="{{ p.name }}">
+                                    {% else %}
+                                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <div class="font-semibold text-slate-900 hover:text-indigo-600">
+                                        <a href="{% url 'products:product_edit' product_id=p.id %}">{{ p.name }}</a>
+                                    </div>
+                                    <div class="text-xs text-slate-500 font-mono">
+                                        {% if p.sku %}SKU: {{ p.sku }}{% else %}slug: {{ p.slug }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-3.5 text-xs text-slate-600">
+                            {% if p.categories.all %}
+                                <div class="flex flex-wrap gap-1 max-w-xs">
+                                    {% for cat in p.categories.all %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
+                                            {{ cat.name }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <span class="text-slate-400 italic">Uncategorized</span>
+                            {% endif %}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-3.5 text-xs font-semibold text-slate-900">
+                            {% if p.price is not None %}
+                                {{ p.currency }} {{ p.price }}
+                            {% else %}
+                                <span class="text-slate-400 font-normal">Contact for price</span>
+                            {% endif %}
+                        </td>
+                        <td class="whitespace-nowrap px-3 py-3.5 text-xs">
+                            {% if p.status == 'PUBLISHED' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                    Published
+                                </span>
+                            {% elif p.status == 'DRAFT' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                    Draft
+                                </span>
+                            {% elif p.status == 'ARCHIVED' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                    Archived
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="relative whitespace-nowrap py-3.5 pl-3 pr-4 sm:pr-6 text-right text-xs font-medium">
+                            <a href="{% url 'products:product_edit' product_id=p.id %}" class="text-indigo-600 hover:text-indigo-900 font-semibold px-2 py-1">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 px-4">
+            <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <h3 class="mt-2 text-sm font-semibold text-slate-900">No products yet</h3>
+            <p class="mt-1 text-xs text-slate-500">Get started by creating your first product in your digital catalogue.</p>
+            <div class="mt-4">
+                <a
+                    href="{% url 'products:product_create' %}"
+                    class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs min-h-[38px]"
+                >
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add First Product</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

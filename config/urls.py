@@ -13,6 +13,7 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("apps.users.urls", namespace="users")),
+    path("merchants/products/", include("apps.products.urls", namespace="products")),
     path("merchants/", include("apps.merchants.urls", namespace="merchants")),
     path("s/", include("apps.stores.urls", namespace="stores")),
     path("", include("apps.core.urls", namespace="core")),

@@ -1,0 +1,470 @@
+{% extends "merchants/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+{% if is_create %}Add Product{% else %}Edit {{ product.name }}{% endif %} | {{ merchant.name }} | mycatalogue
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6 max-w-4xl">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center space-x-2">
+                <a href="{% url 'products:product_list' %}" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                    &larr; Products
+                </a>
+                <span class="text-slate-300">/</span>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+                    {% if is_create %}Add New Product{% else %}Edit Product{% endif %}
+                </h1>
+                {% if not is_create %}
+                    {% if product.status == 'PUBLISHED' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            Published
+                        </span>
+                    {% elif product.status == 'DRAFT' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Draft
+                        </span>
+                    {% elif product.status == 'ARCHIVED' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            Archived
+                        </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <p class="mt-1 text-sm text-slate-500">
+                {% if is_create %}
+                    Create a new product listing in your digital catalogue.
+                {% else %}
+                    Update product details, pricing, categories, custom specifications, and photos.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if not is_create %}
+        <!-- Top Lifecycle Quick Actions -->
+        <div class="flex items-center space-x-2">
+            {% if product.status == 'DRAFT' %}
+            <form method="POST" action="{% url 'products:product_publish' product_id=product.id %}">
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs min-h-[38px]"
+                >
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Publish to Catalogue</span>
+                </button>
+            </form>
+            {% elif product.status == 'PUBLISHED' %}
+            <form method="POST" action="{% url 'products:product_unpublish' product_id=product.id %}">
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-xs min-h-[38px]"
+                >
+                    <span>Revert to Draft</span>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if product.status != 'ARCHIVED' %}
+            <form
+                method="POST"
+                action="{% url 'products:product_archive' product_id=product.id %}"
+                onsubmit="return confirm('Archive \'{{ product.name|escapejs }}\'? It will be removed from your active catalogue.');"
+            >
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-md text-rose-600 hover:text-rose-800 hover:bg-rose-50 border border-slate-200 min-h-[38px] transition-colors"
+                >
+                    <span>Archive</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Product Form -->
+    <form method="POST" id="product-form" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" id="product-id-input" name="product_id" value="{% if not is_create %}{{ product.id }}{% endif %}">
+        {{ form.attributes_json }}
+
+        <!-- Non-field Errors -->
+        {% if form.non_field_errors %}
+        <div class="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800 space-y-1" role="alert">
+            {% for error in form.non_field_errors %}
+                <p class="font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {{ error }}
+                </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Section 1: Basic Information -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">
+                1. Product Information
+            </h2>
+
+            <!-- Name -->
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.name.label }} *
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Slug & SKU Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Slug -->
+                <div>
+                    <label for="{{ form.slug.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.slug.label }}
+                    </label>
+                    <input
+                        type="text"
+                        name="slug"
+                        id="{{ form.slug.id_for_label }}"
+                        value="{{ form.slug.value|default:'' }}"
+                        placeholder="Auto-generated from name if empty"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-xs"
+                        hx-get="{% url 'products:product_slug_check' %}"
+                        hx-trigger="keyup changed delay:400ms"
+                        hx-target="#slug-feedback"
+                        hx-include="[name='slug'], #product-id-input"
+                        autocomplete="off"
+                        spellcheck="false"
+                    >
+                    <div id="slug-feedback"></div>
+                    {% if form.slug.help_text %}
+                        <p class="mt-1 text-[11px] text-slate-400">{{ form.slug.help_text }}</p>
+                    {% endif %}
+                    {% if form.slug.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.slug.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- SKU -->
+                <div>
+                    <label for="{{ form.sku.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.sku.label }}
+                    </label>
+                    {{ form.sku }}
+                    {% if form.sku.help_text %}
+                        <p class="mt-1 text-[11px] text-slate-400">{{ form.sku.help_text }}</p>
+                    {% endif %}
+                    {% if form.sku.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.sku.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 2: Pricing & Availability -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">
+                2. Pricing & Availability
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Price -->
+                <div>
+                    <label for="{{ form.price.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.price.label }}
+                    </label>
+                    <div class="relative rounded-md shadow-xs">
+                        {{ form.price }}
+                    </div>
+                    {% if form.price.help_text %}
+                        <p class="mt-1 text-[11px] text-slate-400">{{ form.price.help_text }}</p>
+                    {% endif %}
+                    {% if form.price.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.price.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Currency -->
+                <div>
+                    <label for="{{ form.currency.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.currency.label }} *
+                    </label>
+                    {{ form.currency }}
+                    {% if form.currency.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.currency.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Is Available Checkbox -->
+            <div class="pt-2">
+                <label class="flex items-start space-x-2.5 cursor-pointer">
+                    {{ form.is_available }}
+                    <div>
+                        <span class="text-xs font-semibold text-slate-800 block">{{ form.is_available.label }}</span>
+                        <span class="text-[11px] text-slate-500 block">{{ form.is_available.help_text }}</span>
+                    </div>
+                </label>
+                {% if form.is_available.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.is_available.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Section 3: Categories -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h2 class="text-base font-semibold text-slate-900">
+                    3. Categories & Collections
+                </h2>
+                <a href="{% url 'products:category_create' %}" class="text-xs font-semibold text-indigo-600 hover:underline">
+                    + New Category
+                </a>
+            </div>
+
+            {% if form.fields.categories.queryset.exists %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                {% for choice_val, choice_label in form.fields.categories.choices %}
+                <label class="flex items-center space-x-2.5 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
+                    <input
+                        type="checkbox"
+                        name="categories"
+                        value="{{ choice_val }}"
+                        class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        {% if form.categories.value and choice_val in form.categories.value %}checked{% endif %}
+                    >
+                    <span class="text-xs font-medium text-slate-700">{{ choice_label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-4 rounded-lg bg-slate-50 border border-dashed border-slate-200 text-center">
+                <p class="text-xs text-slate-500">No categories created yet.</p>
+                <a href="{% url 'products:category_create' %}" class="mt-1 text-xs font-semibold text-indigo-600 hover:underline inline-block">
+                    Create your first category &rarr;
+                </a>
+            </div>
+            {% endif %}
+
+            {% if form.categories.errors %}
+                <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.categories.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Section 4: Custom Specifications / Attributes -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div>
+                    <h2 class="text-base font-semibold text-slate-900">
+                        4. Custom Specifications & Attributes
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                        Add structured specifications (e.g., Color, Material, Size, Weight, Brand). Maximum 20 scalar attributes.
+                    </p>
+                </div>
+                <span id="attr-count-badge" class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    0 / 20
+                </span>
+            </div>
+
+            <div id="attributes-container" class="space-y-2">
+                <!-- Dynamically rendered attribute rows -->
+            </div>
+
+            <button
+                type="button"
+                id="add-attribute-btn"
+                onclick="addAttributeRow()"
+                class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
+            >
+                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Specification</span>
+            </button>
+
+            {% if form.attributes_json.errors %}
+                <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.attributes_json.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Form Submission Bar -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+            <a
+                href="{% url 'products:product_list' %}"
+                class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors min-h-[38px] inline-flex items-center"
+            >
+                Cancel
+            </a>
+            <button
+                type="submit"
+                class="inline-flex items-center px-5 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs min-h-[38px] transition-colors"
+            >
+                {% if is_create %}Create Product as Draft{% else %}Save Changes{% endif %}
+            </button>
+        </div>
+    </form>
+
+    {% if not is_create %}
+    <!-- Section 5: Gallery Images Management -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+        <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">
+            5. Product Gallery & Photos
+        </h2>
+        {% include "products/partials/image_gallery.html" %}
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- JavaScript for Dynamic Attributes Editor -->
+<script>
+    const MAX_ATTRIBUTES = 20;
+
+    function getInitialAttributes() {
+        const input = document.getElementById("{{ form.attributes_json.id_for_label }}");
+        if (input && input.value) {
+            try {
+                return JSON.parse(input.value);
+            } catch (e) {
+                console.error("Failed to parse attributes JSON", e);
+            }
+        }
+        return {};
+    }
+
+    function syncAttributesToJson() {
+        const rows = document.querySelectorAll(".attr-row");
+        const attributes = {};
+        rows.forEach(row => {
+            const keyInput = row.querySelector(".attr-key");
+            const valInput = row.querySelector(".attr-value");
+            const key = keyInput.value.trim();
+            const val = valInput.value.trim();
+            if (key) {
+                attributes[key] = val;
+            }
+        });
+
+        const jsonInput = document.getElementById("{{ form.attributes_json.id_for_label }}");
+        if (jsonInput) {
+            jsonInput.value = JSON.stringify(attributes);
+        }
+
+        const countBadge = document.getElementById("attr-count-badge");
+        if (countBadge) {
+            countBadge.innerText = `${rows.length} / ${MAX_ATTRIBUTES}`;
+        }
+
+        const addBtn = document.getElementById("add-attribute-btn");
+        if (addBtn) {
+            addBtn.disabled = rows.length >= MAX_ATTRIBUTES;
+            if (rows.length >= MAX_ATTRIBUTES) {
+                addBtn.classList.add("opacity-50", "cursor-not-allowed");
+            } else {
+                addBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        }
+    }
+
+    function addAttributeRow(key = "", value = "") {
+        const container = document.getElementById("attributes-container");
+        const rows = container.querySelectorAll(".attr-row");
+        if (rows.length >= MAX_ATTRIBUTES) {
+            alert("Maximum 20 specifications allowed per product.");
+            return;
+        }
+
+        const row = document.createElement("div");
+        row.className = "attr-row flex items-center gap-2";
+        row.innerHTML = `
+            <input
+                type="text"
+                placeholder="Key (e.g. Color)"
+                maxlength="50"
+                value="${escapeHtml(key)}"
+                class="attr-key flex-1 px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                oninput="syncAttributesToJson()"
+            >
+            <input
+                type="text"
+                placeholder="Value (e.g. Navy Blue)"
+                maxlength="255"
+                value="${escapeHtml(value)}"
+                class="attr-value flex-1 px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                oninput="syncAttributesToJson()"
+            >
+            <button
+                type="button"
+                onclick="removeAttributeRow(this)"
+                class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                title="Remove attribute"
+                aria-label="Remove attribute"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        container.appendChild(row);
+        syncAttributesToJson();
+    }
+
+    function removeAttributeRow(button) {
+        const row = button.closest(".attr-row");
+        if (row) {
+            row.remove();
+            syncAttributesToJson();
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const initialAttrs = getInitialAttributes();
+        const keys = Object.keys(initialAttrs);
+        if (keys.length > 0) {
+            keys.forEach(k => addAttributeRow(k, initialAttrs[k]));
+        }
+
+        const form = document.getElementById("product-form");
+        if (form) {
+            form.addEventListener("submit", function () {
+                syncAttributesToJson();
+            });
+        }
+    });
+</script>
+{% endblock %}

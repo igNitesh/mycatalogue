@@ -1,0 +1,368 @@
+<!-- Products Table & Cards Partial -->
+<div id="products-table-container">
+
+    <!-- Out-of-band counter swap so header count stays in sync with HTMX filter/search -->
+    <span id="product-count-badge" hx-swap-oob="true" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+        {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}
+    </span>
+
+    {% if products %}
+    <!-- Desktop Table View -->
+    <div class="hidden md:block overflow-hidden bg-white rounded-xl border border-slate-200 shadow-xs">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                    <th scope="col" class="py-3.5 pl-4 pr-3 sm:pl-6">Product</th>
+                    <th scope="col" class="px-3 py-3.5">Categories</th>
+                    <th scope="col" class="px-3 py-3.5">Price</th>
+                    <th scope="col" class="px-3 py-3.5">Status</th>
+                    <th scope="col" class="px-3 py-3.5">Stock</th>
+                    <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white">
+                {% for p in products %}
+                <tr class="hover:bg-slate-50/70 transition-colors">
+                    <td class="whitespace-nowrap py-3.5 pl-4 pr-3 sm:pl-6">
+                        <div class="flex items-center">
+                            <div class="h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                                {% if p.images.all %}
+                                    <img class="h-full w-full object-cover" src="{{ p.images.first.image.url }}" alt="{{ p.name }}">
+                                {% else %}
+                                    <svg class="h-6 w-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3.5">
+                                <div class="font-semibold text-slate-900 hover:text-indigo-600">
+                                    <a href="{% url 'products:product_edit' product_id=p.id %}">{{ p.name }}</a>
+                                </div>
+                                <div class="text-xs text-slate-500 font-mono flex items-center space-x-2 mt-0.5">
+                                    {% if p.sku %}
+                                        <span class="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded text-[11px]">SKU: {{ p.sku }}</span>
+                                    {% endif %}
+                                    <span class="text-slate-400">/{{ p.slug }}/</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-3.5 text-xs text-slate-600">
+                        {% if p.categories.all %}
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                {% for cat in p.categories.all %}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
+                                        {{ cat.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-slate-400 italic">Uncategorized</span>
+                        {% endif %}
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-3.5 text-xs font-semibold text-slate-900">
+                        {% if p.price is not None %}
+                            {{ p.currency }} {{ p.price }}
+                        {% else %}
+                            <span class="text-slate-400 font-normal">Contact for price</span>
+                        {% endif %}
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-3.5 text-xs">
+                        {% if p.status == 'PUBLISHED' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                Published
+                            </span>
+                        {% elif p.status == 'DRAFT' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                Draft
+                            </span>
+                        {% elif p.status == 'ARCHIVED' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                                Archived
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="whitespace-nowrap px-3 py-3.5 text-xs">
+                        {% if p.is_available %}
+                            <span class="text-emerald-700 font-medium">In Stock</span>
+                        {% else %}
+                            <span class="text-rose-600 font-medium">Unavailable</span>
+                        {% endif %}
+                    </td>
+                    <td class="relative whitespace-nowrap py-3.5 pl-3 pr-4 sm:pr-6 text-right text-xs font-medium">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a
+                                href="{% url 'products:product_edit' product_id=p.id %}"
+                                class="inline-flex items-center px-2.5 py-1.5 rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 font-semibold shadow-xs"
+                            >
+                                Edit
+                            </a>
+
+                            {% if p.status == 'DRAFT' %}
+                            <form method="POST" action="{% url 'products:product_publish' product_id=p.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center px-2.5 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-xs"
+                                    title="Publish product to storefront"
+                                >
+                                    Publish
+                                </button>
+                            </form>
+                            {% elif p.status == 'PUBLISHED' %}
+                            <form method="POST" action="{% url 'products:product_unpublish' product_id=p.id %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center px-2.5 py-1.5 rounded-md border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 font-semibold shadow-xs"
+                                    title="Revert to draft"
+                                >
+                                    Unpublish
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if p.status != 'ARCHIVED' %}
+                            <form
+                                method="POST"
+                                action="{% url 'products:product_archive' product_id=p.id %}"
+                                class="inline"
+                                onsubmit="return confirm('Archive \'{{ p.name|escapejs }}\'? It will be hidden from the active catalogue.');"
+                            >
+                                {% csrf_token %}
+                                <button
+                                    type="submit"
+                                    class="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                    title="Archive product"
+                                    aria-label="Archive {{ p.name }}"
+                                >
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- Mobile Card View -->
+    <div class="md:hidden space-y-3">
+        {% for p in products %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-4 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center">
+                        {% if p.images.all %}
+                            <img class="h-full w-full object-cover" src="{{ p.images.first.image.url }}" alt="{{ p.name }}">
+                        {% else %}
+                            <svg class="h-7 w-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'products:product_edit' product_id=p.id %}" class="font-semibold text-slate-900 text-sm hover:text-indigo-600 block">
+                            {{ p.name }}
+                        </a>
+                        <div class="text-xs text-slate-500 font-mono mt-0.5">
+                            {% if p.sku %}SKU: {{ p.sku }}{% else %}slug: {{ p.slug }}{% endif %}
+                        </div>
+                        <div class="text-sm font-bold text-slate-900 mt-1">
+                            {% if p.price is not None %}
+                                {{ p.currency }} {{ p.price }}
+                            {% else %}
+                                <span class="text-xs text-slate-400 font-normal">Contact for price</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end space-y-1">
+                    {% if p.status == 'PUBLISHED' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            Published
+                        </span>
+                    {% elif p.status == 'DRAFT' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Draft
+                        </span>
+                    {% elif p.status == 'ARCHIVED' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                            Archived
+                        </span>
+                    {% endif %}
+
+                    {% if not p.is_available %}
+                        <span class="text-[11px] text-rose-600 font-medium">Unavailable</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Categories tags -->
+            {% if p.categories.all %}
+            <div class="flex flex-wrap gap-1 pt-1 border-t border-slate-100">
+                {% for cat in p.categories.all %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700">
+                        {{ cat.name }}
+                    </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Mobile Action Bar with 44px min touch target -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100 gap-2">
+                <a
+                    href="{% url 'products:product_edit' product_id=p.id %}"
+                    class="flex-1 inline-flex items-center justify-center px-3 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 min-h-[44px]"
+                >
+                    Edit Product
+                </a>
+
+                {% if p.status == 'DRAFT' %}
+                <form method="POST" action="{% url 'products:product_publish' product_id=p.id %}" class="flex-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button
+                        type="submit"
+                        class="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-semibold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 min-h-[44px]"
+                    >
+                        Publish
+                    </button>
+                </form>
+                {% elif p.status == 'PUBLISHED' %}
+                <form method="POST" action="{% url 'products:product_unpublish' product_id=p.id %}" class="flex-1">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button
+                        type="submit"
+                        class="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 min-h-[44px]"
+                    >
+                        Unpublish
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if p.status != 'ARCHIVED' %}
+                <form
+                    method="POST"
+                    action="{% url 'products:product_archive' product_id=p.id %}"
+                    onsubmit="return confirm('Archive \'{{ p.name|escapejs }}\'?');"
+                >
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        class="p-2.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        title="Archive product"
+                        aria-label="Archive {{ p.name }}"
+                    >
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-2">
+        <div class="text-xs text-slate-500">
+            Showing <span class="font-medium text-slate-900">{{ page_obj.start_index }}</span>
+            to <span class="font-medium text-slate-900">{{ page_obj.end_index }}</span>
+            of <span class="font-medium text-slate-900">{{ page_obj.paginator.count }}</span> products
+        </div>
+
+        <nav class="inline-flex rounded-md shadow-xs -space-x-px text-xs font-medium" aria-label="Pagination">
+            {% if page_obj.has_previous %}
+            <a
+                href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                hx-get="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                hx-target="#products-table-container"
+                hx-swap="outerHTML"
+                hx-push-url="true"
+                class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 min-h-[36px]"
+            >
+                Previous
+            </a>
+            {% else %}
+            <span class="relative inline-flex items-center px-3 py-2 rounded-l-md border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed min-h-[36px]">
+                Previous
+            </span>
+            {% endif %}
+
+            <span class="relative inline-flex items-center px-4 py-2 border border-slate-300 bg-white text-slate-700 min-h-[36px]">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a
+                href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                hx-get="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}"
+                hx-target="#products-table-container"
+                hx-swap="outerHTML"
+                hx-push-url="true"
+                class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-300 bg-white text-slate-500 hover:bg-slate-50 min-h-[36px]"
+            >
+                Next
+            </a>
+            {% else %}
+            <span class="relative inline-flex items-center px-3 py-2 rounded-r-md border border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed min-h-[36px]">
+                Next
+            </span>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs py-14 px-6 text-center">
+        <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        {% if is_filtered %}
+            <h3 class="mt-3 text-sm font-semibold text-slate-900">No matching products found</h3>
+            <p class="mt-1 text-xs text-slate-500">We couldn't find any products matching your active search or filter criteria.</p>
+            <div class="mt-4">
+                <a
+                    href="{% url 'products:product_list' %}"
+                    hx-get="{% url 'products:product_list' %}"
+                    hx-target="#products-table-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                >
+                    Clear All Filters
+                </a>
+            </div>
+        {% else %}
+            <h3 class="mt-3 text-sm font-semibold text-slate-900">Your catalogue has no products yet</h3>
+            <p class="mt-1 text-xs text-slate-500">Create your first product to start showcasing your offerings to customers.</p>
+            <div class="mt-4">
+                <a
+                    href="{% url 'products:product_create' %}"
+                    class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs min-h-[38px]"
+                >
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add New Product</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+

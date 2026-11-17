@@ -74,3 +74,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Scratch and temporary test files
+scratch/
+test_page.html
+

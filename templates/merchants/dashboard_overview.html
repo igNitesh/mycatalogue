@@ -203,8 +203,8 @@
                         </p>
                         {% endif %}
 
-                        <!-- Public Link Verification -->
-                        <div class="pt-3 border-t border-slate-100">
+                        <!-- Public Link & Store Settings Actions -->
+                        <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             {% if store.is_publicly_accessible %}
                                 <a
                                     href="{{ store.get_absolute_url }}"
@@ -222,9 +222,16 @@
                                     <svg class="h-4 w-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                                     </svg>
-                                    <span>Public storefront is offline (requires published store and active merchant).</span>
+                                    <span>Public storefront is offline.</span>
                                 </div>
                             {% endif %}
+
+                            <a
+                                href="{% url 'merchants:store_settings' %}"
+                                class="inline-flex items-center text-xs font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
+                            >
+                                <span>Edit Store Settings &rarr;</span>
+                            </a>
                         </div>
                     </div>
                 {% else %}
@@ -236,9 +243,15 @@
                             </svg>
                         </div>
                         <h3 class="text-sm font-semibold text-slate-900 mb-1">No Storefront Created Yet</h3>
-                        <p class="text-xs text-slate-500 max-w-sm mx-auto">
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">
                             You have not created a digital storefront for this business organization. Storefront setup will be available in Store Management.
                         </p>
+                        <a
+                            href="{% url 'merchants:store_settings' %}"
+                            class="btn-primary py-2 px-4 text-xs font-semibold inline-flex items-center space-x-1.5"
+                        >
+                            <span>Create Digital Storefront</span>
+                        </a>
                     </div>
                 {% endif %}
             </div>

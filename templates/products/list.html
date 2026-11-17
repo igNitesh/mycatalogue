@@ -1,0 +1,129 @@
+{% extends "merchants/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Products | {{ merchant.name }} | mycatalogue{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Products</h1>
+                <span id="product-count-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                    {{ page_obj.paginator.count }} item{{ page_obj.paginator.count|pluralize }}
+                </span>
+            </div>
+            <p class="mt-1 text-sm text-slate-500">
+                Browse, search, edit, publish, and manage product availability.
+            </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <a
+                href="{% url 'products:category_list' %}"
+                class="inline-flex items-center px-3 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs min-h-[38px] transition-colors"
+            >
+                <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>Categories</span>
+            </a>
+            <a
+                href="{% url 'products:product_create' %}"
+                class="inline-flex items-center px-4 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs min-h-[38px] transition-colors"
+            >
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Product</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <form
+            id="filter-form"
+            method="GET"
+            action="{% url 'products:product_list' %}"
+            hx-get="{% url 'products:product_list' %}"
+            hx-target="#products-table-container"
+            hx-swap="outerHTML"
+            hx-push-url="true"
+            hx-trigger="submit, change from:select, keyup changed delay:350ms from:#search-input"
+            class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between"
+        >
+            <!-- Search Bar -->
+            <div class="relative flex-1">
+                <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    type="search"
+                    id="search-input"
+                    name="q"
+                    value="{{ current_q }}"
+                    placeholder="Search by product name or SKU..."
+                    class="block w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-lg border border-slate-300 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs"
+                    autocomplete="off"
+                >
+            </div>
+
+            <!-- Filters Group -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Status Filter -->
+                <div class="w-36">
+                    <label for="status-filter" class="sr-only">Filter by status</label>
+                    <select
+                        id="status-filter"
+                        name="status"
+                        class="block w-full text-xs rounded-lg border border-slate-300 py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs text-slate-700 font-medium"
+                    >
+                        <option value="" {% if not current_status or current_status == 'ACTIVE' %}selected{% endif %}>Active (Live + Draft)</option>
+                        <option value="PUBLISHED" {% if current_status == 'PUBLISHED' %}selected{% endif %}>Published Only</option>
+                        <option value="DRAFT" {% if current_status == 'DRAFT' %}selected{% endif %}>Draft Only</option>
+                        <option value="ARCHIVED" {% if current_status == 'ARCHIVED' %}selected{% endif %}>Archived Only</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="w-40">
+                    <label for="category-filter" class="sr-only">Filter by category</label>
+                    <select
+                        id="category-filter"
+                        name="category"
+                        class="block w-full text-xs rounded-lg border border-slate-300 py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs text-slate-700 font-medium"
+                    >
+                        <option value="" {% if not current_category %}selected{% endif %}>All Categories</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if current_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }} {% if not cat.is_active %}(Inactive){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if is_filtered %}
+                <a
+                    href="{% url 'products:product_list' %}"
+                    hx-get="{% url 'products:product_list' %}"
+                    hx-target="#products-table-container"
+                    hx-swap="outerHTML"
+                    hx-push-url="true"
+                    class="inline-flex items-center px-2.5 py-2 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                >
+                    Reset
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Products Table Partial Target -->
+    {% include "products/partials/product_table.html" %}
+
+</div>
+{% endblock %}

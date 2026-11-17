@@ -1,0 +1,161 @@
+{% extends "merchants/dashboard_base.html" %}
+{% load static %}
+
+{% block title %}
+{% if is_create %}Add Category{% else %}Edit {{ category.name }}{% endif %} | {{ merchant.name }} | mycatalogue
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="space-y-6 max-w-2xl">
+
+    <!-- Header Section -->
+    <div class="flex items-center space-x-2 pb-4 border-b border-slate-200">
+        <a href="{% url 'products:category_list' %}" class="text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+            &larr; Categories
+        </a>
+        <span class="text-slate-300">/</span>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            {% if is_create %}Add New Category{% else %}Edit Category{% endif %}
+        </h1>
+    </div>
+
+    <!-- Category Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" id="category-id-input" name="category_id" value="{% if not is_create %}{{ category.id }}{% endif %}">
+
+        <!-- Non-field Errors -->
+        {% if form.non_field_errors %}
+        <div class="p-4 rounded-xl border border-rose-200 bg-rose-50 text-xs text-rose-800 space-y-1" role="alert">
+            {% for error in form.non_field_errors %}
+                <p class="font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1.5 text-rose-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {{ error }}
+                </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            <!-- Name -->
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.name.label }} *
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Slug -->
+            <div>
+                <label for="{{ form.slug.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.slug.label }}
+                </label>
+                <input
+                    type="text"
+                    name="slug"
+                    id="{{ form.slug.id_for_label }}"
+                    value="{{ form.slug.value|default:'' }}"
+                    placeholder="Auto-generated from name if blank"
+                    class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-mono text-xs"
+                    hx-get="{% url 'products:category_slug_check' %}"
+                    hx-trigger="keyup changed delay:400ms"
+                    hx-target="#cat-slug-feedback"
+                    hx-include="[name='slug'], #category-id-input"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <div id="cat-slug-feedback"></div>
+                {% if form.slug.help_text %}
+                    <p class="mt-1 text-[11px] text-slate-400">{{ form.slug.help_text }}</p>
+                {% endif %}
+                {% if form.slug.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.slug.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Image Upload & Preview -->
+            <div>
+                <label for="{{ form.image.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.image.label }}
+                </label>
+                
+                {% if not is_create and category.image %}
+                <div class="mb-3 flex items-center space-x-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}" class="h-12 w-12 object-cover rounded-md border border-slate-200">
+                    <div>
+                        <div class="text-xs text-slate-600 font-medium">Current Category Image</div>
+                        <label class="flex items-center space-x-2 text-xs text-rose-600 mt-1 cursor-pointer">
+                            {{ form.clear_image }}
+                            <span>{{ form.clear_image.label }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                {{ form.image }}
+                <p class="mt-1 text-[11px] text-slate-400">Accepted formats: JPEG, PNG, WebP (max 5 MB).</p>
+                {% if form.image.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.image.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <!-- Display Order -->
+                <div>
+                    <label for="{{ form.display_order.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.display_order.label }}
+                    </label>
+                    {{ form.display_order }}
+                    {% if form.display_order.help_text %}
+                        <p class="mt-1 text-[11px] text-slate-400">{{ form.display_order.help_text }}</p>
+                    {% endif %}
+                    {% if form.display_order.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.display_order.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Is Active -->
+                <div class="flex items-center pt-5">
+                    <label class="flex items-center space-x-2.5 cursor-pointer">
+                        {{ form.is_active }}
+                        <span class="text-xs font-semibold text-slate-800">{{ form.is_active.label }}</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Submission Bar -->
+        <div class="pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+            <a
+                href="{% url 'products:category_list' %}"
+                class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors min-h-[38px] inline-flex items-center"
+            >
+                Cancel
+            </a>
+            <button
+                type="submit"
+                class="inline-flex items-center px-5 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs min-h-[38px] transition-colors"
+            >
+                {% if is_create %}Create Category{% else %}Save Changes{% endif %}
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
