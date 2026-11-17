@@ -1,0 +1,162 @@
+{% extends "merchants/dashboard_base.html" %}
+
+{% block title %}Create Storefront | {{ merchant.name }} | mycatalogue{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+    <!-- Header Section -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6">
+        <div class="flex items-start space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 flex-shrink-0 mt-0.5">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                    Create Digital Storefront
+                </h1>
+                <p class="mt-1 text-xs sm:text-sm text-slate-600">
+                    Set up a digital storefront for <strong class="text-slate-900 font-semibold">{{ merchant.name }}</strong>. You can configure your public URL, description, logo, and cover image.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Notice Banner -->
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 sm:p-5 text-sm text-amber-900 space-y-1.5">
+        <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-200 text-amber-900">
+                Draft Status
+            </span>
+            <span class="font-bold text-amber-950 text-xs sm:text-sm">Store Initial State</span>
+        </div>
+        <p class="text-amber-800 text-xs sm:text-sm">
+            Newly created storefronts start in <strong>Draft</strong> status. You will be able to review, adjust branding, and publish to visitors whenever ready.
+        </p>
+    </div>
+
+    <!-- Creation Form Card -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden p-5 sm:p-6">
+        <form
+            method="POST"
+            action="{% url 'merchants:store_settings' %}"
+            enctype="multipart/form-data"
+            class="space-y-5"
+        >
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4 border border-red-200 text-sm text-red-700 space-y-1" role="alert">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Store Name -->
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ form.name.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Public Slug with Live HTMX Feedback -->
+            <div>
+                <label for="{{ form.slug.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ form.slug.label }} <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                    {{ form.slug }}
+                </div>
+                <div id="slug-feedback">
+                    <!-- Live HTMX Availability Check Container -->
+                </div>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ form.slug.help_text }}
+                </p>
+                {% if form.slug.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.slug.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Image Upload Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <!-- Logo Upload -->
+                <div>
+                    <label for="{{ form.logo.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                        {{ form.logo.label }}
+                    </label>
+                    {{ form.logo }}
+                    <p class="mt-1 text-[11px] text-slate-400">Square ratio recommended (e.g. 400x400 px).</p>
+                    {% if form.logo.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ form.logo.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Cover Image Upload -->
+                <div>
+                    <label for="{{ form.cover_image.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                        {{ form.cover_image.label }}
+                    </label>
+                    {{ form.cover_image }}
+                    <p class="mt-1 text-[11px] text-slate-400">Landscape banner recommended (e.g. 1200x400 px).</p>
+                    {% if form.cover_image.errors %}
+                    <p class="mt-1 text-xs text-red-600">{{ form.cover_image.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions Area -->
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <a
+                    href="{% url 'merchants:dashboard' %}"
+                    class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md min-h-[44px] flex items-center"
+                >
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="btn-primary py-2.5 px-6 text-sm font-semibold inline-flex items-center space-x-2 min-h-[44px]"
+                >
+                    <span>Create Storefront</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live HTMX listener for slug formatting
+    document.addEventListener('DOMContentLoaded', function() {
+        var slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+        if (slugInput) {
+            slugInput.setAttribute('hx-get', '{% url "merchants:store_check_slug" %}');
+            slugInput.setAttribute('hx-trigger', 'keyup changed delay:400ms');
+            slugInput.setAttribute('hx-target', '#slug-feedback');
+            if (typeof htmx !== 'undefined') {
+                htmx.process(slugInput);
+            }
+        }
+    });
+</script>
+{% endblock %}
+

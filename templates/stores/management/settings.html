@@ -1,0 +1,391 @@
+{% extends "merchants/dashboard_base.html" %}
+
+{% block title %}Store Settings | {{ store.name }} | mycatalogue{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Store Status & Header Banner -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6">
+        <div class="sm:flex sm:items-center sm:justify-between gap-4">
+            <div class="min-w-0">
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight truncate" title="{{ store.name }}">
+                        {{ store.name }}
+                    </h1>
+                    {% if store.status == 'PUBLISHED' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 flex-shrink-0">
+                            <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Published
+                        </span>
+                    {% elif store.status == 'DRAFT' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 flex-shrink-0">
+                            Draft
+                        </span>
+                    {% elif store.status == 'UNPUBLISHED' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 flex-shrink-0">
+                            Unpublished
+                        </span>
+                    {% elif store.status == 'SUSPENDED' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 flex-shrink-0">
+                            Suspended
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 flex-shrink-0">
+                            {{ store.get_status_display }}
+                        </span>
+                    {% endif %}
+                </div>
+                <p class="mt-1 text-xs sm:text-sm text-slate-500 font-mono truncate">
+                    Public URL: /s/{{ store.slug }}/
+                </p>
+            </div>
+            <div class="mt-3 sm:mt-0 flex items-center space-x-3 flex-shrink-0">
+                {% if store.is_publicly_accessible %}
+                    <a
+                        href="{{ store.get_absolute_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center text-xs sm:text-sm font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-md px-3 py-2 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[40px]"
+                    >
+                        <span>View Live Storefront</span>
+                        <svg class="ml-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                {% else %}
+                    <span class="inline-flex items-center text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                        <svg class="h-4 w-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                        <span>Storefront Offline</span>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Store Profile & Branding -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-6">
+        <div>
+            <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">
+                Store Profile &amp; Branding
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+                Manage your storefront name, customer-facing description, and brand imagery.
+            </p>
+        </div>
+
+        <form
+            method="POST"
+            action="{% url 'merchants:store_settings' %}"
+            enctype="multipart/form-data"
+            class="space-y-5"
+        >
+            {% csrf_token %}
+
+            {% if profile_form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4 border border-red-200 text-sm text-red-700 space-y-1" role="alert">
+                {% for error in profile_form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Store Name -->
+            <div>
+                <label for="{{ profile_form.name.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ profile_form.name.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ profile_form.name }}
+                {% if profile_form.name.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ profile_form.name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="{{ profile_form.description.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ profile_form.description.label }}
+                </label>
+                {{ profile_form.description }}
+                {% if profile_form.description.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ profile_form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Image Management Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+
+                <!-- Logo Section -->
+                <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Store Logo
+                    </div>
+                    {% if store.logo %}
+                        <div class="flex items-center space-x-3">
+                            <div class="w-16 h-16 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0">
+                                <img src="{{ store.logo.url }}" alt="{{ store.name }} logo" class="w-full h-full object-cover">
+                            </div>
+                            <div class="text-xs text-slate-600 space-y-1">
+                                <span class="block font-medium text-slate-800">Current Logo</span>
+                                <label class="inline-flex items-center space-x-1.5 text-red-600 hover:text-red-800 cursor-pointer text-xs">
+                                    {{ profile_form.clear_logo }}
+                                    <span>{{ profile_form.clear_logo.label }}</span>
+                                </label>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-3">
+                            <div class="w-16 h-16 rounded-lg bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-slate-400 flex-shrink-0">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs text-slate-400">No logo uploaded yet.</span>
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <label for="{{ profile_form.logo.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            {{ profile_form.logo.label }}
+                        </label>
+                        {{ profile_form.logo }}
+                        {% if profile_form.logo.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.logo.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Cover Image Section -->
+                <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+                    <div class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Store Cover Banner
+                    </div>
+                    {% if store.cover_image %}
+                        <div class="space-y-2">
+                            <div class="h-20 w-full rounded-lg bg-white border border-slate-200 overflow-hidden">
+                                <img src="{{ store.cover_image.url }}" alt="{{ store.name }} cover" class="w-full h-full object-cover">
+                            </div>
+                            <label class="inline-flex items-center space-x-1.5 text-red-600 hover:text-red-800 cursor-pointer text-xs">
+                                {{ profile_form.clear_cover_image }}
+                                <span>{{ profile_form.clear_cover_image.label }}</span>
+                            </label>
+                        </div>
+                    {% else %}
+                        <div class="h-20 w-full rounded-lg bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                            No cover image uploaded yet.
+                        </div>
+                    {% endif %}
+
+                    <div>
+                        <label for="{{ profile_form.cover_image.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            {{ profile_form.cover_image.label }}
+                        </label>
+                        {{ profile_form.cover_image }}
+                        {% if profile_form.cover_image.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.cover_image.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Profile Button -->
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button
+                    type="submit"
+                    class="btn-primary py-2.5 px-6 text-sm font-semibold min-h-[44px]"
+                >
+                    Save Profile Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Section 2: Public Store URL & Slug Management -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-6">
+        <div>
+            <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">
+                Public Storefront URL &amp; Slug
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+                Your public URL slug identifies your storefront across MyCatalogue.
+            </p>
+        </div>
+
+        <!-- Warning Callout -->
+        <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs sm:text-sm text-amber-900 space-y-1.5">
+            <div class="flex items-center space-x-2 font-bold text-amber-950">
+                <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span>Important URL Warning</span>
+            </div>
+            <p class="text-amber-800">
+                Changing your store slug will immediately alter your public storefront URL. <strong>Previously shared links, QR codes, bookmarks, and search listings will stop working.</strong> Automatic redirects are not provided.
+            </p>
+        </div>
+
+        <form
+            method="POST"
+            action="{% url 'merchants:store_change_slug' %}"
+            class="space-y-4"
+        >
+            {% csrf_token %}
+
+            {% if slug_form.non_field_errors %}
+            <div class="rounded-md bg-red-50 p-4 border border-red-200 text-sm text-red-700 space-y-1" role="alert">
+                {% for error in slug_form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Slug Input with Live HTMX Feedback -->
+            <div>
+                <label for="{{ slug_form.slug.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ slug_form.slug.label }} <span class="text-red-500">*</span>
+                </label>
+                <div class="flex rounded-md shadow-xs">
+                    <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-xs sm:text-sm font-mono">
+                        /s/
+                    </span>
+                    {{ slug_form.slug }}
+                </div>
+                <div id="slug-feedback-settings">
+                    <!-- HTMX availability target -->
+                </div>
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ slug_form.slug.help_text }}
+                </p>
+                {% if slug_form.slug.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ slug_form.slug.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Confirmation Checkbox -->
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <label class="flex items-start space-x-2.5 cursor-pointer">
+                    <div class="flex items-center h-5">
+                        {{ slug_form.confirm_slug_change }}
+                    </div>
+                    <span class="text-xs sm:text-sm text-slate-700 font-medium">
+                        {{ slug_form.confirm_slug_change.label }}
+                    </span>
+                </label>
+                {% if slug_form.confirm_slug_change.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ slug_form.confirm_slug_change.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-2 flex justify-end">
+                <button
+                    type="submit"
+                    class="btn-primary py-2.5 px-6 text-sm font-semibold min-h-[44px]"
+                    {% if not can_change_slug %}disabled{% endif %}
+                >
+                    Update Store Slug
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Section 3: Publishing & Visibility Controls -->
+    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 space-y-5">
+        <div>
+            <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-2">
+                Storefront Publishing &amp; Visibility
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+                Control whether your store is live to customers or kept in offline mode.
+            </p>
+        </div>
+
+        {% if not merchant_is_active %}
+            <!-- Merchant is PENDING, SUSPENDED, or INACTIVE -->
+            <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs sm:text-sm text-amber-900 space-y-2">
+                <div class="flex items-center space-x-2 font-bold text-amber-950">
+                    <svg class="h-5 w-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Store Publishing Restricted</span>
+                </div>
+                <p class="text-amber-800">
+                    Your business organization is currently in <strong>{{ merchant.get_status_display }}</strong> status. Commercial platform activation is required before public publishing is unlocked.
+                </p>
+            </div>
+        {% else %}
+            <!-- Merchant is ACTIVE: Publishing Controls Available -->
+            {% if store.status == 'PUBLISHED' %}
+                <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="font-bold text-emerald-950 text-sm sm:text-base">Storefront is Currently Published</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-emerald-800">
+                            Your storefront is visible to visitors at <strong class="font-mono">/s/{{ store.slug }}/</strong>.
+                        </p>
+                    </div>
+
+                    <form method="POST" action="{% url 'merchants:store_publish_toggle' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="unpublish">
+                        <button
+                            type="submit"
+                            class="w-full sm:w-auto px-4 py-2.5 rounded-md text-xs sm:text-sm font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[44px]"
+                            {% if not can_publish %}disabled{% endif %}
+                        >
+                            Unpublish Storefront
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                            <span class="font-bold text-slate-900 text-sm sm:text-base">Storefront is Currently Offline ({{ store.get_status_display }})</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600">
+                            Your storefront is private and cannot be viewed by customers.
+                        </p>
+                    </div>
+
+                    <form method="POST" action="{% url 'merchants:store_publish_toggle' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="publish">
+                        <button
+                            type="submit"
+                            class="w-full sm:w-auto px-5 py-2.5 rounded-md text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[44px]"
+                            {% if not can_publish %}disabled{% endif %}
+                        >
+                            Publish Storefront Live
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live HTMX listener for slug formatting in settings
+    document.addEventListener('DOMContentLoaded', function() {
+        var slugInput = document.getElementById('{{ slug_form.slug.id_for_label }}');
+        if (slugInput) {
+            slugInput.setAttribute('hx-get', '{% url "merchants:store_check_slug" %}');
+            slugInput.setAttribute('hx-trigger', 'keyup changed delay:400ms');
+            slugInput.setAttribute('hx-target', '#slug-feedback-settings');
+            if (typeof htmx !== 'undefined') {
+                htmx.process(slugInput);
+            }
+        }
+    });
+</script>
+{% endblock %}
+
