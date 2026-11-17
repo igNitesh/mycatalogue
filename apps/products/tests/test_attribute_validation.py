@@ -95,3 +95,204 @@ class TestProductAttributeValidation:
         unicode_payload = {f"Key_{i:02d}": "🎉" * 200 for i in range(20)}
         with pytest.raises(InvalidProductAttributeError, match="exceeds the 10 KB limit"):
             validate_attributes(unicode_payload)
+
+    def test_legacy_key_collision_rejected(self):
+        with pytest.raises(
+            InvalidProductAttributeError, match="Duplicate attribute key after normalization"
+        ):
+            validate_attributes({"Fabric": "Silk", "fabric": "Cotton"})
+
+    def test_valid_structured_specifications(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "fabric",
+                    "label": "Fabric Material",
+                    "type": "single_select",
+                    "options": ["Pure Silk", "Organic Linen", "Cotton"],
+                    "value": "Pure Silk",
+                },
+                {
+                    "key": "sizes",
+                    "label": "Available Sizes",
+                    "type": "multi_select",
+                    "options": ["S", "M", "L", "XL"],
+                    "values": ["S", "M"],
+                },
+                {
+                    "key": "colors",
+                    "label": "Color Palette",
+                    "type": "color",
+                    "values": [
+                        {"name": "Midnight Blue", "hex": "#191970"},
+                        {"name": "Olive", "hex": "#556b2f"},
+                    ],
+                },
+                {
+                    "key": "thread_count",
+                    "label": "Thread Count",
+                    "type": "number",
+                    "value": 400,
+                    "unit": "TC",
+                },
+                {
+                    "key": "care_instructions",
+                    "label": "Care Instructions",
+                    "type": "text",
+                    "value": "Dry clean only.",
+                },
+            ]
+        }
+        cleaned = validate_attributes(payload)
+        assert len(cleaned["specifications"]) == 5
+        assert cleaned["specifications"][0]["key"] == "fabric"
+        assert cleaned["specifications"][0]["value"] == "Pure Silk"
+        assert cleaned["specifications"][1]["values"] == ["S", "M"]
+        assert cleaned["specifications"][2]["values"][0]["hex"] == "#191970"
+        assert cleaned["specifications"][3]["value"] == 400
+        assert cleaned["specifications"][3]["unit"] == "TC"
+
+    def test_structured_specifications_exceeding_15_rejected(self):
+        specs = [
+            {"key": f"spec_{i:02d}", "label": f"Spec {i}", "type": "text", "value": "Val"}
+            for i in range(16)
+        ]
+        with pytest.raises(
+            InvalidProductAttributeError, match="more than 15 custom specifications"
+        ):
+            validate_attributes({"specifications": specs})
+
+    def test_structured_duplicate_keys_rejected(self):
+        payload = {
+            "specifications": [
+                {"key": "fabric", "label": "Fabric", "type": "text", "value": "Silk"},
+                {"key": "fabric", "label": "Fabric Second", "type": "text", "value": "Cotton"},
+            ]
+        }
+        with pytest.raises(
+            InvalidProductAttributeError, match="Duplicate specification key 'fabric'"
+        ):
+            validate_attributes(payload)
+
+    def test_structured_unknown_type_rejected(self):
+        payload = {
+            "specifications": [
+                {"key": "custom", "label": "Custom", "type": "invalid_type", "value": "foo"}
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="invalid type 'invalid_type'"):
+            validate_attributes(payload)
+
+    def test_structured_unauthorized_fields_rejected(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "fabric",
+                    "label": "Fabric",
+                    "type": "text",
+                    "value": "Silk",
+                    "extra_field": "disallowed",
+                }
+            ]
+        }
+        with pytest.raises(
+            InvalidProductAttributeError, match="unauthorized fields for type 'text'"
+        ):
+            validate_attributes(payload)
+
+    def test_single_select_membership_validation(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "fabric",
+                    "label": "Fabric",
+                    "type": "single_select",
+                    "options": ["Silk", "Cotton"],
+                    "value": "Polyester",  # Not in options
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="is not in allowed options"):
+            validate_attributes(payload)
+
+    def test_multi_select_membership_and_duplicate_validation(self):
+        # Value not in options
+        payload_invalid_val = {
+            "specifications": [
+                {
+                    "key": "sizes",
+                    "label": "Sizes",
+                    "type": "multi_select",
+                    "options": ["S", "M", "L"],
+                    "values": ["S", "XXL"],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="is not in allowed options"):
+            validate_attributes(payload_invalid_val)
+
+        # Duplicate values in selected list
+        payload_dup_val = {
+            "specifications": [
+                {
+                    "key": "sizes",
+                    "label": "Sizes",
+                    "type": "multi_select",
+                    "options": ["S", "M", "L"],
+                    "values": ["S", "S"],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="Duplicate selected value 'S'"):
+            validate_attributes(payload_dup_val)
+
+    def test_number_boolean_and_finite_rejection(self):
+        # In Python, bool is subclass of int. Reject bool!
+        payload_bool = {
+            "specifications": [
+                {"key": "weight", "label": "Weight", "type": "number", "value": True}
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="not boolean or string"):
+            validate_attributes(payload_bool)
+
+        # Non-numeric string
+        payload_str = {
+            "specifications": [
+                {"key": "weight", "label": "Weight", "type": "number", "value": "100"}
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="not boolean or string"):
+            validate_attributes(payload_str)
+
+    def test_color_validation(self):
+        # Invalid hex
+        payload_bad_hex = {
+            "specifications": [
+                {
+                    "key": "colors",
+                    "label": "Colors",
+                    "type": "color",
+                    "values": [{"name": "Blue", "hex": "blue"}],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="valid 6-character hex code"):
+            validate_attributes(payload_bad_hex)
+
+        # Duplicate color hex
+        payload_dup_hex = {
+            "specifications": [
+                {
+                    "key": "colors",
+                    "label": "Colors",
+                    "type": "color",
+                    "values": [
+                        {"name": "Blue 1", "hex": "#191970"},
+                        {"name": "Blue 2", "hex": "#191970"},
+                    ],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="Duplicate color hex"):
+            validate_attributes(payload_dup_hex)

@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from apps.merchants.choices import MerchantStatus
 
 from .choices import StoreStatus
-from .validators import normalize_slug, validate_store_slug
+from .validators import normalize_slug, validate_social_links, validate_store_slug
 
 
 class Store(models.Model):
@@ -32,6 +32,13 @@ class Store(models.Model):
         help_text=_("Public store URL identifier (lowercase letters, numbers, hyphens)."),
     )
     description = models.TextField(_("store description"), blank=True, default="")
+    tagline = models.CharField(
+        _("tagline"),
+        max_length=120,
+        blank=True,
+        default="",
+        help_text=_("Short marketing slogan displayed under the store name."),
+    )
     logo = models.ImageField(
         _("logo image"),
         upload_to="stores/logos/%Y/%m/",
@@ -43,6 +50,24 @@ class Store(models.Model):
         upload_to="stores/covers/%Y/%m/",
         blank=True,
         null=True,
+    )
+    whatsapp_number = models.CharField(
+        _("WhatsApp number"),
+        max_length=20,
+        blank=True,
+        default="",
+        help_text=_("Dedicated mobile number for WhatsApp customer inquiries."),
+    )
+    allow_whatsapp_fallback = models.BooleanField(
+        _("allow WhatsApp fallback"),
+        default=True,
+        help_text=_("If True and WhatsApp number is blank, fallback to merchant contact number."),
+    )
+    social_links = models.JSONField(
+        _("social links"),
+        default=dict,
+        blank=True,
+        help_text=_("Structured social profiles (Instagram, Facebook, etc.)."),
     )
     status = models.CharField(
         _("store status"),
@@ -76,6 +101,12 @@ class Store(models.Model):
         super().clean()
         if self.slug:
             self.slug = normalize_slug(self.slug)
+        if self.whatsapp_number:
+            self.whatsapp_number = self.whatsapp_number.strip()
+        if self.tagline:
+            self.tagline = self.tagline.strip()
+        if self.social_links:
+            self.social_links = validate_social_links(self.social_links)
 
     @property
     def is_publicly_accessible(self) -> bool:

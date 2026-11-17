@@ -1,7 +1,9 @@
 import os
 import uuid
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models.functions import Lower
@@ -9,11 +11,12 @@ from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
-from .choices import Currency, ProductStatus
+from .choices import AvailabilityMode, Currency, PriceDisplayMode, ProductStatus
 from .exceptions import CrossTenantAssignmentError
 from .validators import (
     validate_and_normalize_slug,
     validate_attributes,
+    validate_product_pricing,
 )
 
 
@@ -114,13 +117,31 @@ class Product(models.Model):
     )
     description = models.TextField(_("product description"), blank=True, default="")
     price = models.DecimalField(
-        _("price"),
+        _("selling price"),
         max_digits=12,
         decimal_places=2,
         null=True,
         blank=True,
         validators=[MinValueValidator(Decimal("0.00"))],
-        help_text=_("Product price. Leave empty for 'Price on Request' / inquiry."),
+        help_text=_(
+            "Merchant selling price offered to consumers. Mandatory when Show Price is selected on published items."
+        ),
+    )
+    mrp = models.DecimalField(
+        _("maximum retail price (MRP)"),
+        max_digits=12,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal("0.00"))],
+        help_text=_("Anchor price for discount display. Must be >= price if both set."),
+    )
+    price_display_mode = models.CharField(
+        _("price display mode"),
+        max_length=20,
+        choices=PriceDisplayMode.choices,
+        default=PriceDisplayMode.SHOW_PRICE,
+        help_text=_("Governs whether numeric price is shown or replaced by an enquiry prompt."),
     )
     currency = models.CharField(
         _("currency"),
@@ -135,17 +156,24 @@ class Product(models.Model):
         default=ProductStatus.DRAFT,
         db_index=True,
     )
+    availability_mode = models.CharField(
+        _("availability mode"),
+        max_length=20,
+        choices=AvailabilityMode.choices,
+        default=AvailabilityMode.IN_STOCK,
+        help_text=_("Inventory availability state (In Stock, Made to Order, Out of Stock)."),
+    )
     is_available = models.BooleanField(
         _("is available"),
         default=True,
         db_index=True,
-        help_text=_("Availability/in-stock indicator. Does not affect publication status."),
+        help_text=_("Availability/in-stock indicator. Preserved during migration transition."),
     )
     attributes = models.JSONField(
         _("custom attributes"),
         default=dict,
         blank=True,
-        help_text=_("Structured key-value attributes (e.g. Fabric, Size, Color)."),
+        help_text=_("Structured specifications or key-value attributes."),
     )
     categories = models.ManyToManyField(
         Category,
@@ -172,12 +200,58 @@ class Product(models.Model):
                 condition=models.Q(sku__isnull=False) & ~models.Q(sku=""),
                 name="unique_merchant_product_sku",
             ),
+            # CheckConstraints for Pricing
             models.CheckConstraint(
                 condition=models.Q(price__gte=0) | models.Q(price__isnull=True),
                 name="check_product_price_non_negative",
             ),
+            models.CheckConstraint(
+                condition=models.Q(mrp__gte=0) | models.Q(mrp__isnull=True),
+                name="chk_prod_mrp_non_neg",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(mrp__isnull=True)
+                | models.Q(price__isnull=True)
+                | models.Q(mrp__gte=models.F("price")),
+                name="chk_prod_mrp_gte_price",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(price_display_mode__in=PriceDisplayMode.values),
+                name="chk_prod_price_mode_valid",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(status=ProductStatus.PUBLISHED)
+                | ~models.Q(price_display_mode=PriceDisplayMode.SHOW_PRICE)
+                | models.Q(price__isnull=False),
+                name="chk_prod_pub_price",
+            ),
+            # CheckConstraint for Availability Synchronization
+            models.CheckConstraint(
+                condition=(
+                    (
+                        models.Q(availability_mode=AvailabilityMode.OUT_OF_STOCK)
+                        & models.Q(is_available=False)
+                    )
+                    | (
+                        models.Q(
+                            availability_mode__in=[
+                                AvailabilityMode.IN_STOCK,
+                                AvailabilityMode.MADE_TO_ORDER,
+                            ]
+                        )
+                        & models.Q(is_available=True)
+                    )
+                ),
+                name="chk_prod_avail_mode_sync",
+            ),
         ]
         indexes = [
+            # Consolidated query-justified index covering catalog queries
+            models.Index(
+                fields=["merchant", "status", "availability_mode", "created_at"],
+                name="idx_prod_mcht_mode_created",
+            ),
+            # Preserved legacy index for backward compatibility during transition
             models.Index(
                 fields=["merchant", "status", "is_available"],
                 name="idx_prod_mcht_stat_avail",
@@ -188,8 +262,101 @@ class Product(models.Model):
             ),
         ]
 
+    def __init__(self, *args, **kwargs) -> None:
+        self._assigned_fields: set[str] = set()
+        super().__init__(*args, **kwargs)
+        for field in ("availability_mode", "is_available"):
+            if field in kwargs:
+                self._assigned_fields.add(field)
+        self._initial_availability_mode = self.availability_mode
+        self._initial_is_available = self.is_available
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__(name, value)
+        if name in ("availability_mode", "is_available") and hasattr(self, "_assigned_fields"):
+            self._assigned_fields.add(name)
+
     def __str__(self) -> str:
         return f"{self.name} ({self.merchant.name})"
+
+    def save(self, *args, **kwargs) -> None:
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            has_mode = "availability_mode" in update_fields
+            has_avail = "is_available" in update_fields
+            if has_mode and not has_avail:
+                self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                update_fields.add("is_available")
+            elif has_avail and not has_mode:
+                self.availability_mode = (
+                    AvailabilityMode.IN_STOCK
+                    if self.is_available
+                    else AvailabilityMode.OUT_OF_STOCK
+                )
+                update_fields.add("availability_mode")
+            elif has_mode and has_avail:
+                expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                if self.is_available != expected_avail:
+                    raise ValidationError(
+                        _(
+                            "Contradictory availability values: availability_mode '%(mode)s' "
+                            "conflicts with is_available=%(avail)s."
+                        )
+                        % {"mode": self.availability_mode, "avail": self.is_available}
+                    )
+            kwargs["update_fields"] = list(update_fields)
+        else:
+            # Full instance save
+            has_mode = "availability_mode" in getattr(self, "_assigned_fields", set())
+            has_avail = "is_available" in getattr(self, "_assigned_fields", set())
+
+            if self._state.adding:
+                if has_mode and not has_avail:
+                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                elif has_avail and not has_mode:
+                    self.availability_mode = (
+                        AvailabilityMode.IN_STOCK
+                        if self.is_available
+                        else AvailabilityMode.OUT_OF_STOCK
+                    )
+                else:
+                    expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                    if self.is_available != expected_avail:
+                        raise ValidationError(
+                            _(
+                                "Contradictory availability values on creation: availability_mode '%(mode)s' "
+                                "conflicts with is_available=%(avail)s."
+                            )
+                            % {"mode": self.availability_mode, "avail": self.is_available}
+                        )
+            else:
+                if has_mode and not has_avail:
+                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                elif has_avail and not has_mode:
+                    self.availability_mode = (
+                        AvailabilityMode.IN_STOCK
+                        if self.is_available
+                        else AvailabilityMode.OUT_OF_STOCK
+                    )
+                elif has_mode and has_avail:
+                    expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                    if self.is_available != expected_avail:
+                        raise ValidationError(
+                            _(
+                                "Contradictory availability update: availability_mode '%(mode)s' "
+                                "conflicts with is_available=%(avail)s."
+                            )
+                            % {"mode": self.availability_mode, "avail": self.is_available}
+                        )
+                else:
+                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+
+        super().save(*args, **kwargs)
+        self._initial_availability_mode = self.availability_mode
+        self._initial_is_available = self.is_available
+        if hasattr(self, "_assigned_fields"):
+            self._assigned_fields.clear()
 
     def clean(self) -> None:
         super().clean()
@@ -200,6 +367,42 @@ class Product(models.Model):
             self.sku = clean_sku if clean_sku else None
         if self.attributes:
             self.attributes = validate_attributes(self.attributes)
+        validate_product_pricing(
+            price=self.price,
+            mrp=self.mrp,
+            price_display_mode=self.price_display_mode,
+            status=self.status,
+        )
+
+    def refresh_from_db(self, using: Any = None, fields: Any = None) -> None:
+        super().refresh_from_db(using=using, fields=fields)
+        self._initial_availability_mode = self.availability_mode
+        self._initial_is_available = self.is_available
+        if hasattr(self, "_assigned_fields"):
+            self._assigned_fields.clear()
+
+    @property
+    def discount_percentage(self) -> int | None:
+        """
+        Computes integer discount percentage using standard commercial half-up rounding.
+        Returns None if:
+          - price_display_mode != SHOW_PRICE
+          - price or mrp is missing
+          - mrp <= price
+          - mrp <= 0
+          - calculated discount is less than 1% (avoids misleading '0% OFF' badges)
+        """
+        if (
+            self.price_display_mode == PriceDisplayMode.SHOW_PRICE
+            and self.price is not None
+            and self.mrp is not None
+            and self.mrp > self.price
+            and self.mrp > 0
+        ):
+            raw_discount = ((self.mrp - self.price) / self.mrp) * Decimal("100")
+            rounded = int(raw_discount.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+            return rounded if rounded >= 1 else None
+        return None
 
     @property
     def primary_image(self) -> models.Model | None:

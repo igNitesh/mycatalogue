@@ -13,7 +13,7 @@ from apps.merchants.permissions import (
     has_merchant_permission,
 )
 
-from .choices import Currency, ProductStatus
+from .choices import AvailabilityMode, Currency, PriceDisplayMode, ProductStatus
 from .exceptions import (
     CategoryNotFoundError,
     CategorySlugAlreadyTakenError,
@@ -30,6 +30,7 @@ from .validators import (
     validate_and_normalize_slug,
     validate_attributes,
     validate_product_image,
+    validate_product_pricing,
 )
 
 _UNSET = object()
@@ -65,7 +66,11 @@ def create_product(
     sku: str | None = None,
     description: str = "",
     price: Decimal | None = None,
+    mrp: Decimal | None = None,
+    price_display_mode: str = _UNSET,
     currency: str = Currency.INR,
+    is_available: bool = _UNSET,
+    availability_mode: str = _UNSET,
     category_ids: list[uuid.UUID | str] | None = None,
     attributes: dict[str, Any] | None = None,
 ) -> Product:
@@ -88,8 +93,43 @@ def create_product(
 
     clean_sku = sku.strip() if sku and sku.strip() else None
 
-    if price is not None and price < Decimal("0.00"):
-        raise ValidationError(_("Product price cannot be negative."))
+    # Availability synchronization & validation
+    if availability_mode is not _UNSET and is_available is not _UNSET:
+        expected_avail = availability_mode != AvailabilityMode.OUT_OF_STOCK
+        if bool(is_available) != expected_avail:
+            raise ValidationError(
+                _(
+                    "Contradictory availability values: availability_mode '%(mode)s' "
+                    "conflicts with is_available=%(avail)s."
+                )
+                % {"mode": availability_mode, "avail": is_available}
+            )
+        final_mode = availability_mode
+        final_avail = bool(is_available)
+    elif availability_mode is not _UNSET:
+        final_mode = availability_mode
+        final_avail = availability_mode != AvailabilityMode.OUT_OF_STOCK
+    elif is_available is not _UNSET:
+        final_avail = bool(is_available)
+        final_mode = AvailabilityMode.IN_STOCK if final_avail else AvailabilityMode.OUT_OF_STOCK
+    else:
+        final_mode = AvailabilityMode.IN_STOCK
+        final_avail = True
+
+    if price_display_mode is _UNSET:
+        if price is None:
+            final_price_display_mode = PriceDisplayMode.CONTACT_FOR_PRICE
+        else:
+            final_price_display_mode = PriceDisplayMode.SHOW_PRICE
+    else:
+        final_price_display_mode = price_display_mode
+
+    validate_product_pricing(
+        price=price,
+        mrp=mrp,
+        price_display_mode=final_price_display_mode,
+        status=ProductStatus.DRAFT,
+    )
 
     clean_attributes = validate_attributes(attributes) if attributes else {}
 
@@ -125,9 +165,12 @@ def create_product(
                 sku=clean_sku,
                 description=description.strip() if description else "",
                 price=price,
+                mrp=mrp,
+                price_display_mode=final_price_display_mode,
                 currency=currency,
                 status=ProductStatus.DRAFT,
-                is_available=True,
+                availability_mode=final_mode,
+                is_available=final_avail,
                 attributes=clean_attributes,
             )
         except IntegrityError as exc:
@@ -156,9 +199,12 @@ def update_product_profile(
     name: str = _UNSET,
     description: str = _UNSET,
     price: Decimal | None = _UNSET,
+    mrp: Decimal | None = _UNSET,
+    price_display_mode: str = _UNSET,
     currency: str = _UNSET,
     sku: str | None = _UNSET,
     is_available: bool = _UNSET,
+    availability_mode: str = _UNSET,
     attributes: dict[str, Any] = _UNSET,
 ) -> Product:
     """
@@ -183,10 +229,26 @@ def update_product_profile(
         if description is not _UNSET:
             product.description = (description or "").strip()
 
+        target_price = product.price if price is _UNSET else price
+        target_mrp = product.mrp if mrp is _UNSET else mrp
+        target_mode = (
+            product.price_display_mode if price_display_mode is _UNSET else price_display_mode
+        )
+        validate_product_pricing(
+            price=target_price,
+            mrp=target_mrp,
+            price_display_mode=target_mode,
+            status=product.status,
+        )
+
         if price is not _UNSET:
-            if price is not None and price < Decimal("0.00"):
-                raise ValidationError(_("Product price cannot be negative."))
             product.price = price
+
+        if mrp is not _UNSET:
+            product.mrp = mrp
+
+        if price_display_mode is not _UNSET:
+            product.price_display_mode = price_display_mode
 
         if currency is not _UNSET:
             product.currency = currency
@@ -204,8 +266,26 @@ def update_product_profile(
                     )
             product.sku = clean_sku
 
-        if is_available is not _UNSET:
+        if availability_mode is not _UNSET and is_available is not _UNSET:
+            expected_avail = availability_mode != AvailabilityMode.OUT_OF_STOCK
+            if bool(is_available) != expected_avail:
+                raise ValidationError(
+                    _(
+                        "Contradictory availability values: availability_mode '%(mode)s' "
+                        "conflicts with is_available=%(avail)s."
+                    )
+                    % {"mode": availability_mode, "avail": is_available}
+                )
+            product.availability_mode = availability_mode
             product.is_available = bool(is_available)
+        elif availability_mode is not _UNSET:
+            product.availability_mode = availability_mode
+            product.is_available = availability_mode != AvailabilityMode.OUT_OF_STOCK
+        elif is_available is not _UNSET:
+            product.is_available = bool(is_available)
+            product.availability_mode = (
+                AvailabilityMode.IN_STOCK if product.is_available else AvailabilityMode.OUT_OF_STOCK
+            )
 
         if attributes is not _UNSET:
             product.attributes = validate_attributes(attributes)
@@ -294,6 +374,11 @@ def publish_product(
 
         if product.status == ProductStatus.PUBLISHED:
             return product
+
+        if product.price_display_mode == PriceDisplayMode.SHOW_PRICE and product.price is None:
+            raise ValidationError(
+                _("Cannot publish product: selling price is required when Show Price is selected.")
+            )
 
         product.status = ProductStatus.PUBLISHED
         product.save(update_fields=["status", "updated_at"])

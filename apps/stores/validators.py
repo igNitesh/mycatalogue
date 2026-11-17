@@ -1,6 +1,8 @@
 import re
+from typing import Any
 
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.utils.translation import gettext_lazy as _
 
 from .exceptions import SlugValidationError
@@ -52,6 +54,11 @@ RESERVED_SLUGS = frozenset(
         "webhooks",
     }
 )
+
+ALLOWED_SOCIAL_PLATFORMS = frozenset(
+    {"instagram", "facebook", "youtube", "twitter_x", "pinterest", "website"}
+)
+_https_url_validator = URLValidator(schemes=["https"])
 
 
 def normalize_slug(value: str | None) -> str:
@@ -113,3 +120,44 @@ def validate_and_normalize_slug(value: str) -> str:
         raise SlugValidationError(f"The slug '{normalized}' is reserved and cannot be used.")
 
     return normalized
+
+
+def validate_social_links(social_links: Any) -> dict[str, str]:
+    """
+    Validates social media links dictionary:
+    - Must be a dictionary.
+    - Platforms restricted to allowlist.
+    - Values must be valid HTTPS URLs.
+    - Empty string values are stripped.
+    """
+    if social_links is None:
+        return {}
+    if not isinstance(social_links, dict):
+        raise ValidationError(_("Social links must be a dictionary/object."))
+
+    cleaned: dict[str, str] = {}
+    for platform, url in social_links.items():
+        if platform not in ALLOWED_SOCIAL_PLATFORMS:
+            raise ValidationError(
+                _("Unsupported social platform '%(platform)s'. Allowed platforms: %(allowed)s.")
+                % {"platform": platform, "allowed": ", ".join(sorted(ALLOWED_SOCIAL_PLATFORMS))}
+            )
+        if url is None:
+            continue
+        if not isinstance(url, str):
+            raise ValidationError(
+                _("URL for platform '%(platform)s' must be a string.") % {"platform": platform}
+            )
+        clean_url = url.strip()
+        if not clean_url:
+            continue
+        try:
+            _https_url_validator(clean_url)
+        except ValidationError as exc:
+            raise ValidationError(
+                _("Invalid HTTPS URL for '%(platform)s': %(url)s.")
+                % {"platform": platform, "url": clean_url}
+            ) from exc
+        cleaned[platform] = clean_url
+
+    return cleaned

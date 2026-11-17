@@ -168,7 +168,7 @@ def get_public_storefront_products(
     1. Merchant status must be strictly ACTIVE.
     2. Store must exist, be in PUBLISHED status, and be publicly accessible.
     3. Product status must be strictly PUBLISHED.
-    4. Note: is_available=False does NOT hide the product; it displays with an out-of-stock badge.
+    4. Note: availability_mode=OUT_OF_STOCK (is_available=False) does NOT hide the product; it displays with an out-of-stock badge.
     5. If category_slug is provided, the category must belong to this merchant and be active.
     """
     if not merchant or merchant.status != MerchantStatus.ACTIVE:

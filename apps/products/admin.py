@@ -31,12 +31,22 @@ class ProductAdmin(admin.ModelAdmin):
         "slug",
         "sku",
         "price",
+        "mrp",
+        "price_display_mode",
         "currency",
         "status",
+        "availability_mode",
         "is_available",
         "created_at",
     )
-    list_filter = ("status", "is_available", "currency", "merchant")
+    list_filter = (
+        "status",
+        "availability_mode",
+        "price_display_mode",
+        "is_available",
+        "currency",
+        "merchant",
+    )
     search_fields = ("name", "slug", "sku", "merchant__name")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductCategoryInline, ProductImageInline]

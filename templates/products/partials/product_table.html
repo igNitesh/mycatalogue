@@ -84,10 +84,12 @@
                         {% endif %}
                     </td>
                     <td class="whitespace-nowrap px-3 py-3.5 text-xs">
-                        {% if p.is_available %}
+                        {% if p.availability_mode == 'IN_STOCK' %}
                             <span class="text-emerald-700 font-medium">In Stock</span>
+                        {% elif p.availability_mode == 'MADE_TO_ORDER' %}
+                            <span class="text-amber-700 font-medium">Made to Order</span>
                         {% else %}
-                            <span class="text-rose-600 font-medium">Unavailable</span>
+                            <span class="text-rose-600 font-medium">Out of Stock</span>
                         {% endif %}
                     </td>
                     <td class="relative whitespace-nowrap py-3.5 pl-3 pr-4 sm:pr-6 text-right text-xs font-medium">
@@ -200,8 +202,10 @@
                         </span>
                     {% endif %}
 
-                    {% if not p.is_available %}
-                        <span class="text-[11px] text-rose-600 font-medium">Unavailable</span>
+                    {% if p.availability_mode == 'MADE_TO_ORDER' %}
+                        <span class="text-[11px] text-amber-700 font-medium">Made to Order</span>
+                    {% elif p.availability_mode == 'OUT_OF_STOCK' or not p.is_available %}
+                        <span class="text-[11px] text-rose-600 font-medium">Out of Stock</span>
                     {% endif %}
                 </div>
             </div>
