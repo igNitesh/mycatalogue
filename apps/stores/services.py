@@ -22,7 +22,7 @@ from .exceptions import (
     StorePublishError,
 )
 from .models import Store
-from .validators import validate_and_normalize_slug
+from .validators import validate_and_normalize_slug, validate_social_links
 
 _UNSET = object()
 
@@ -34,8 +34,12 @@ def create_store(
     name: str,
     slug: str,
     description: str = "",
+    tagline: str = "",
     logo: Any = None,
     cover_image: Any = None,
+    whatsapp_number: str = "",
+    allow_whatsapp_fallback: bool = True,
+    social_links: dict[str, Any] | None = None,
 ) -> Store:
     """
     Atomically creates a new Store for a Merchant in DRAFT status.
@@ -60,6 +64,16 @@ def create_store(
     # Check for slug conflict upfront
     if Store.objects.annotate(lower_slug=Lower("slug")).filter(lower_slug=normalized_slug).exists():
         raise SlugAlreadyTakenError(f"The slug '{normalized_slug}' is already taken.")
+
+    clean_tagline = (tagline or "").strip()
+    if len(clean_tagline) > 120:
+        raise ValidationError("Store tagline cannot exceed 120 characters.")
+
+    clean_whatsapp = (whatsapp_number or "").strip()
+    if len(clean_whatsapp) > 20:
+        raise ValidationError("WhatsApp number cannot exceed 20 characters.")
+
+    clean_social_links = validate_social_links(social_links)
 
     resolved_merchant_id = getattr(merchant_id, "id", merchant_id)
 
@@ -91,8 +105,12 @@ def create_store(
                 name=clean_name,
                 slug=normalized_slug,
                 description=description.strip() if description else "",
+                tagline=clean_tagline,
                 logo=logo,
                 cover_image=cover_image,
+                whatsapp_number=clean_whatsapp,
+                allow_whatsapp_fallback=bool(allow_whatsapp_fallback),
+                social_links=clean_social_links,
                 status=StoreStatus.DRAFT,
             )
         except IntegrityError as exc:
@@ -116,11 +134,15 @@ def update_store_profile(
     actor: Any,
     name: str | None = None,
     description: str | None = None,
+    tagline: str | None = _UNSET,
     logo: Any = _UNSET,
     cover_image: Any = _UNSET,
+    whatsapp_number: str | None = _UNSET,
+    allow_whatsapp_fallback: bool | None = _UNSET,
+    social_links: dict[str, Any] | None = _UNSET,
 ) -> Store:
     """
-    Updates store branding details (name, description, logo, cover image).
+    Updates store branding details (name, description, logo, cover image, tagline, whatsapp, social links).
 
     Requirements:
     - Actor is mandatory and verified server-side.
@@ -168,6 +190,13 @@ def update_store_profile(
             store.description = description.strip()
             update_fields.append("description")
 
+        if tagline is not _UNSET:
+            clean_tagline = (tagline or "").strip()
+            if len(clean_tagline) > 120:
+                raise ValidationError("Store tagline cannot exceed 120 characters.")
+            store.tagline = clean_tagline
+            update_fields.append("tagline")
+
         if logo is not _UNSET:
             store.logo = logo
             update_fields.append("logo")
@@ -175,6 +204,21 @@ def update_store_profile(
         if cover_image is not _UNSET:
             store.cover_image = cover_image
             update_fields.append("cover_image")
+
+        if whatsapp_number is not _UNSET:
+            clean_whatsapp = (whatsapp_number or "").strip()
+            if len(clean_whatsapp) > 20:
+                raise ValidationError("WhatsApp number cannot exceed 20 characters.")
+            store.whatsapp_number = clean_whatsapp
+            update_fields.append("whatsapp_number")
+
+        if allow_whatsapp_fallback is not _UNSET:
+            store.allow_whatsapp_fallback = bool(allow_whatsapp_fallback)
+            update_fields.append("allow_whatsapp_fallback")
+
+        if social_links is not _UNSET:
+            store.social_links = validate_social_links(social_links)
+            update_fields.append("social_links")
 
         store.save(update_fields=update_fields)
         return store

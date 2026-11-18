@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
 
-from .validators import validate_store_slug
+from .validators import validate_social_links, validate_store_slug
 
 FORM_CONTROL_CLASS = (
     "w-full px-3 py-2 border border-slate-300 rounded-md shadow-xs "
@@ -138,6 +138,41 @@ class StoreCreationForm(forms.Form):
             }
         ),
     )
+    tagline = forms.CharField(
+        label=_("Store Tagline (Optional)"),
+        max_length=120,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": FORM_CONTROL_CLASS,
+                "placeholder": _("e.g. Handcrafted goods made with passion"),
+            }
+        ),
+        help_text=_("A short customer-facing slogan (up to 120 characters)."),
+    )
+    whatsapp_number = forms.CharField(
+        label=_("WhatsApp Number (Optional)"),
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": FORM_CONTROL_CLASS,
+                "placeholder": _("+91 98765 43210"),
+            }
+        ),
+        help_text=_("International phone number with country code for direct customer enquiries."),
+    )
+    allow_whatsapp_fallback = forms.BooleanField(
+        label=_("Enable WhatsApp Fallback"),
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            }
+        ),
+        help_text=_("Allow customers to enquire or place orders via WhatsApp on your storefront."),
+    )
     logo = forms.FileField(
         label=_("Store Logo (Max 2 MB, JPEG/PNG/WebP)"),
         required=False,
@@ -175,6 +210,18 @@ class StoreCreationForm(forms.Form):
             raise ValidationError(_("Store name cannot be empty."))
         return name
 
+    def clean_tagline(self) -> str:
+        tagline = (self.cleaned_data.get("tagline") or "").strip()
+        if len(tagline) > 120:
+            raise ValidationError(_("Store tagline cannot exceed 120 characters."))
+        return tagline
+
+    def clean_whatsapp_number(self) -> str:
+        whatsapp = (self.cleaned_data.get("whatsapp_number") or "").strip()
+        if len(whatsapp) > 20:
+            raise ValidationError(_("WhatsApp number cannot exceed 20 characters."))
+        return whatsapp
+
     def clean_slug(self) -> str:
         slug = self.cleaned_data.get("slug", "").strip().lower()
         if not slug:
@@ -192,6 +239,46 @@ class StoreCreationForm(forms.Form):
         if cover:
             validate_uploaded_image(cover, MAX_COVER_SIZE, _("Cover image"))
         return cover
+
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = super().clean()
+        social_dict: dict[str, str] = {}
+
+        # 1. Direct social_links passed in data (if any dict or JSON)
+        raw_social = self.data.get("social_links")
+        if isinstance(raw_social, dict):
+            for k, v in raw_social.items():
+                if v and isinstance(v, str) and v.strip():
+                    social_dict[k] = v.strip()
+        elif isinstance(raw_social, str) and raw_social.strip():
+            try:
+                import json
+
+                parsed = json.loads(raw_social)
+                if isinstance(parsed, dict):
+                    for k, v in parsed.items():
+                        if v and isinstance(v, str) and v.strip():
+                            social_dict[k] = v.strip()
+            except Exception:
+                pass
+
+        # 2. Individual social fields
+        for platform in ("instagram", "facebook", "youtube", "twitter_x", "pinterest", "website"):
+            field_name = f"social_{platform}"
+            val = cleaned_data.get(field_name)
+            if val and isinstance(val, str) and val.strip():
+                clean_url = val.strip()
+                if clean_url.startswith("http://"):
+                    self.add_error(field_name, _("Social links must use secure HTTPS (https://)."))
+                    continue
+                social_dict[platform] = clean_url
+
+        try:
+            cleaned_data["social_links"] = validate_social_links(social_dict)
+        except ValidationError as exc:
+            self.add_error(None, exc)
+
+        return cleaned_data
 
 
 class StoreProfileForm(forms.Form):
@@ -220,6 +307,89 @@ class StoreProfileForm(forms.Form):
                 "rows": 3,
                 "placeholder": _("Tell customers what your store offers..."),
             }
+        ),
+    )
+    tagline = forms.CharField(
+        label=_("Store Tagline"),
+        max_length=120,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": FORM_CONTROL_CLASS,
+                "placeholder": _("e.g. Artisanal fashion crafted with care"),
+            }
+        ),
+        help_text=_("A short customer-facing slogan (up to 120 characters)."),
+    )
+    whatsapp_number = forms.CharField(
+        label=_("WhatsApp Contact Number"),
+        max_length=20,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": FORM_CONTROL_CLASS,
+                "placeholder": _("+91 98765 43210"),
+            }
+        ),
+        help_text=_("International phone number with country code for direct customer enquiries."),
+    )
+    allow_whatsapp_fallback = forms.BooleanField(
+        label=_("Enable WhatsApp Fallback"),
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            }
+        ),
+        help_text=_("Allow customers to enquire or place orders via WhatsApp on your storefront."),
+    )
+    social_instagram = forms.URLField(
+        label=_("Instagram URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://instagram.com/yourhandle"}
+        ),
+    )
+    social_facebook = forms.URLField(
+        label=_("Facebook URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://facebook.com/yourpage"}
+        ),
+    )
+    social_youtube = forms.URLField(
+        label=_("YouTube URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://youtube.com/@yourchannel"}
+        ),
+    )
+    social_twitter_x = forms.URLField(
+        label=_("X / Twitter URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://x.com/yourhandle"}
+        ),
+    )
+    social_pinterest = forms.URLField(
+        label=_("Pinterest URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://pinterest.com/yourprofile"}
+        ),
+    )
+    social_website = forms.URLField(
+        label=_("Official Website URL"),
+        assume_scheme="https",
+        required=False,
+        widget=forms.URLInput(
+            attrs={"class": FORM_CONTROL_CLASS, "placeholder": "https://yourwebsite.com"}
         ),
     )
     logo = forms.FileField(
@@ -277,6 +447,18 @@ class StoreProfileForm(forms.Form):
             raise ValidationError(_("Store name cannot be empty."))
         return name
 
+    def clean_tagline(self) -> str:
+        tagline = (self.cleaned_data.get("tagline") or "").strip()
+        if len(tagline) > 120:
+            raise ValidationError(_("Store tagline cannot exceed 120 characters."))
+        return tagline
+
+    def clean_whatsapp_number(self) -> str:
+        whatsapp = (self.cleaned_data.get("whatsapp_number") or "").strip()
+        if len(whatsapp) > 20:
+            raise ValidationError(_("WhatsApp number cannot exceed 20 characters."))
+        return whatsapp
+
     def clean_logo(self) -> Any:
         logo = self.cleaned_data.get("logo")
         if logo:
@@ -288,6 +470,46 @@ class StoreProfileForm(forms.Form):
         if cover:
             validate_uploaded_image(cover, MAX_COVER_SIZE, _("Cover image"))
         return cover
+
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = super().clean()
+        social_dict: dict[str, str] = {}
+
+        # 1. Direct social_links passed in data (if any dict or JSON)
+        raw_social = self.data.get("social_links")
+        if isinstance(raw_social, dict):
+            for k, v in raw_social.items():
+                if v and isinstance(v, str) and v.strip():
+                    social_dict[k] = v.strip()
+        elif isinstance(raw_social, str) and raw_social.strip():
+            try:
+                import json
+
+                parsed = json.loads(raw_social)
+                if isinstance(parsed, dict):
+                    for k, v in parsed.items():
+                        if v and isinstance(v, str) and v.strip():
+                            social_dict[k] = v.strip()
+            except Exception:
+                pass
+
+        # 2. Individual social fields
+        for platform in ("instagram", "facebook", "youtube", "twitter_x", "pinterest", "website"):
+            field_name = f"social_{platform}"
+            val = cleaned_data.get(field_name)
+            if val and isinstance(val, str) and val.strip():
+                clean_url = val.strip()
+                if clean_url.startswith("http://"):
+                    self.add_error(field_name, _("Social links must use secure HTTPS (https://)."))
+                    continue
+                social_dict[platform] = clean_url
+
+        try:
+            cleaned_data["social_links"] = validate_social_links(social_dict)
+        except ValidationError as exc:
+            self.add_error(None, exc)
+
+        return cleaned_data
 
 
 class StoreSlugForm(forms.Form):

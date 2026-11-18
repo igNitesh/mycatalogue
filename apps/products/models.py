@@ -263,17 +263,61 @@ class Product(models.Model):
         ]
 
     def __init__(self, *args, **kwargs) -> None:
-        self._assigned_fields: set[str] = set()
+        self._initialized = False
+        has_mode = "availability_mode" in kwargs
+        has_avail = "is_available" in kwargs
+
+        if has_mode and not has_avail:
+            kwargs["is_available"] = kwargs["availability_mode"] != AvailabilityMode.OUT_OF_STOCK
+        elif has_avail and not has_mode:
+            kwargs["availability_mode"] = (
+                AvailabilityMode.IN_STOCK
+                if kwargs["is_available"]
+                else AvailabilityMode.OUT_OF_STOCK
+            )
+        elif has_mode and has_avail:
+            expected_avail = kwargs["availability_mode"] != AvailabilityMode.OUT_OF_STOCK
+            if bool(kwargs["is_available"]) != expected_avail:
+                raise ValidationError(
+                    _(
+                        "Contradictory availability values: availability_mode '%(mode)s' "
+                        "conflicts with is_available=%(avail)s."
+                    )
+                    % {"mode": kwargs["availability_mode"], "avail": kwargs["is_available"]}
+                )
+
         super().__init__(*args, **kwargs)
-        for field in ("availability_mode", "is_available"):
-            if field in kwargs:
-                self._assigned_fields.add(field)
-        self._initial_availability_mode = self.availability_mode
-        self._initial_is_available = self.is_available
+
+        # Positional arguments check - only if concrete field values were provided
+        if args:
+            mode_val = self.__dict__.get("availability_mode")
+            avail_val = self.__dict__.get("is_available")
+            if (
+                mode_val is not None
+                and avail_val is not None
+                and isinstance(avail_val, bool)
+                and isinstance(mode_val, str)
+            ):
+                expected_avail = mode_val != AvailabilityMode.OUT_OF_STOCK
+                if avail_val != expected_avail:
+                    raise ValidationError(
+                        _(
+                            "Contradictory availability values in positional arguments: "
+                            "availability_mode '%(mode)s' conflicts with is_available=%(avail)s."
+                        )
+                        % {"mode": mode_val, "avail": avail_val}
+                    )
+
+        self._db_availability_mode: str | None = None
+        self._db_is_available: bool | None = None
+        self._assigned_fields: set[str] = set()
+        self._initialized = True
 
     def __setattr__(self, name: str, value: Any) -> None:
         super().__setattr__(name, value)
-        if name in ("availability_mode", "is_available") and hasattr(self, "_assigned_fields"):
+        if getattr(self, "_initialized", False) and name in ("availability_mode", "is_available"):
+            if not hasattr(self, "_assigned_fields"):
+                self._assigned_fields = set()
             self._assigned_fields.add(name)
 
     def __str__(self) -> str:
@@ -283,12 +327,38 @@ class Product(models.Model):
         update_fields = kwargs.get("update_fields")
         if update_fields is not None:
             update_fields = set(update_fields)
+            if not update_fields:
+                super().save(*args, **kwargs)
+                return
+
             has_mode = "availability_mode" in update_fields
             has_avail = "is_available" in update_fields
+
+            db_mode = getattr(self, "_db_availability_mode", None)
+            db_avail = getattr(self, "_db_is_available", None)
+
             if has_mode and not has_avail:
+                if db_avail is not None and self.is_available != db_avail:
+                    expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                    if self.is_available != expected_avail:
+                        raise ValidationError(
+                            _(
+                                "Contradictory availability update: in-memory is_available conflicts "
+                                "with availability_mode in update_fields."
+                            )
+                        )
                 self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
                 update_fields.add("is_available")
             elif has_avail and not has_mode:
+                if db_mode is not None and self.availability_mode != db_mode:
+                    expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                    if self.is_available != expected_avail:
+                        raise ValidationError(
+                            _(
+                                "Contradictory availability update: in-memory availability_mode conflicts "
+                                "with is_available in update_fields."
+                            )
+                        )
                 self.availability_mode = (
                     AvailabilityMode.IN_STOCK
                     if self.is_available
@@ -308,18 +378,54 @@ class Product(models.Model):
             kwargs["update_fields"] = list(update_fields)
         else:
             # Full instance save
-            has_mode = "availability_mode" in getattr(self, "_assigned_fields", set())
-            has_avail = "is_available" in getattr(self, "_assigned_fields", set())
+            assigned = getattr(self, "_assigned_fields", set())
+            has_mode = "availability_mode" in assigned
+            has_avail = "is_available" in assigned
 
-            if self._state.adding:
-                if has_mode and not has_avail:
-                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
-                elif has_avail and not has_mode:
-                    self.availability_mode = (
-                        AvailabilityMode.IN_STOCK
-                        if self.is_available
-                        else AvailabilityMode.OUT_OF_STOCK
+            if has_mode and not has_avail:
+                self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+            elif has_avail and not has_mode:
+                self.availability_mode = (
+                    AvailabilityMode.IN_STOCK
+                    if self.is_available
+                    else AvailabilityMode.OUT_OF_STOCK
+                )
+            elif has_mode and has_avail:
+                expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                if self.is_available != expected_avail:
+                    raise ValidationError(
+                        _(
+                            "Contradictory availability update: availability_mode '%(mode)s' "
+                            "conflicts with is_available=%(avail)s."
+                        )
+                        % {"mode": self.availability_mode, "avail": self.is_available}
                     )
+            else:
+                db_mode = getattr(self, "_db_availability_mode", None)
+                db_avail = getattr(self, "_db_is_available", None)
+
+                if db_mode is not None and db_avail is not None:
+                    mode_changed = self.availability_mode != db_mode
+                    avail_changed = self.is_available != db_avail
+
+                    if mode_changed and not avail_changed:
+                        self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                    elif avail_changed and not mode_changed:
+                        self.availability_mode = (
+                            AvailabilityMode.IN_STOCK
+                            if self.is_available
+                            else AvailabilityMode.OUT_OF_STOCK
+                        )
+                    else:
+                        expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
+                        if self.is_available != expected_avail:
+                            raise ValidationError(
+                                _(
+                                    "Contradictory availability values: availability_mode '%(mode)s' "
+                                    "conflicts with is_available=%(avail)s."
+                                )
+                                % {"mode": self.availability_mode, "avail": self.is_available}
+                            )
                 else:
                     expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
                     if self.is_available != expected_avail:
@@ -330,31 +436,10 @@ class Product(models.Model):
                             )
                             % {"mode": self.availability_mode, "avail": self.is_available}
                         )
-            else:
-                if has_mode and not has_avail:
-                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
-                elif has_avail and not has_mode:
-                    self.availability_mode = (
-                        AvailabilityMode.IN_STOCK
-                        if self.is_available
-                        else AvailabilityMode.OUT_OF_STOCK
-                    )
-                elif has_mode and has_avail:
-                    expected_avail = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
-                    if self.is_available != expected_avail:
-                        raise ValidationError(
-                            _(
-                                "Contradictory availability update: availability_mode '%(mode)s' "
-                                "conflicts with is_available=%(avail)s."
-                            )
-                            % {"mode": self.availability_mode, "avail": self.is_available}
-                        )
-                else:
-                    self.is_available = self.availability_mode != AvailabilityMode.OUT_OF_STOCK
 
         super().save(*args, **kwargs)
-        self._initial_availability_mode = self.availability_mode
-        self._initial_is_available = self.is_available
+        self._db_availability_mode = self.availability_mode
+        self._db_is_available = self.is_available
         if hasattr(self, "_assigned_fields"):
             self._assigned_fields.clear()
 
@@ -374,12 +459,31 @@ class Product(models.Model):
             status=self.status,
         )
 
+    @classmethod
+    def from_db(cls, db: Any, field_names: Any, values: Any) -> Any:
+        instance = super().from_db(db, field_names, values)
+        if "availability_mode" in field_names:
+            instance._db_availability_mode = instance.__dict__.get("availability_mode")
+        else:
+            instance._db_availability_mode = None
+
+        if "is_available" in field_names:
+            instance._db_is_available = instance.__dict__.get("is_available")
+        else:
+            instance._db_is_available = None
+        instance._assigned_fields = set()
+        instance._initialized = True
+        return instance
+
     def refresh_from_db(self, using: Any = None, fields: Any = None) -> None:
+        self._initialized = False
         super().refresh_from_db(using=using, fields=fields)
-        self._initial_availability_mode = self.availability_mode
-        self._initial_is_available = self.is_available
-        if hasattr(self, "_assigned_fields"):
-            self._assigned_fields.clear()
+        if fields is None or "availability_mode" in fields:
+            self._db_availability_mode = self.__dict__.get("availability_mode")
+        if fields is None or "is_available" in fields:
+            self._db_is_available = self.__dict__.get("is_available")
+        self._assigned_fields = set()
+        self._initialized = True
 
     @property
     def discount_percentage(self) -> int | None:

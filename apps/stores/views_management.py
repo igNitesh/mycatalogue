@@ -107,12 +107,26 @@ class StoreSettingsView(LoginRequiredMixin, VerifiedUserRequiredMixin, MerchantC
         can_publish = can_perform_merchant_action(self.membership, MerchantPermission.PUBLISH_STORE)
         merchant_is_active = self.merchant.status == MerchantStatus.ACTIVE
 
-        profile_form = StoreProfileForm(
-            initial={
-                "name": store.name,
-                "description": store.description,
-            }
-        )
+        initial_profile: dict[str, Any] = {
+            "name": store.name,
+            "description": store.description,
+            "tagline": store.tagline,
+            "whatsapp_number": store.whatsapp_number,
+            "allow_whatsapp_fallback": store.allow_whatsapp_fallback,
+        }
+        if store.social_links and isinstance(store.social_links, dict):
+            for platform in (
+                "instagram",
+                "facebook",
+                "youtube",
+                "twitter_x",
+                "pinterest",
+                "website",
+            ):
+                if platform in store.social_links:
+                    initial_profile[f"social_{platform}"] = store.social_links[platform]
+
+        profile_form = StoreProfileForm(initial=initial_profile)
         slug_form = StoreSlugForm(initial={"slug": store.slug})
 
         return render(
@@ -144,8 +158,13 @@ class StoreSettingsView(LoginRequiredMixin, VerifiedUserRequiredMixin, MerchantC
                         name=form.cleaned_data["name"],
                         slug=form.cleaned_data["slug"],
                         description=form.cleaned_data.get("description", ""),
+                        tagline=form.cleaned_data.get("tagline", ""),
                         logo=form.cleaned_data.get("logo"),
                         cover_image=form.cleaned_data.get("cover_image"),
+                        whatsapp_number=form.cleaned_data.get("whatsapp_number", ""),
+                        allow_whatsapp_fallback=form.cleaned_data.get(
+                            "allow_whatsapp_fallback", True
+                        ),
                     )
                     messages.success(
                         request,
@@ -216,6 +235,12 @@ class StoreSettingsView(LoginRequiredMixin, VerifiedUserRequiredMixin, MerchantC
                     actor=request.user,
                     name=profile_form.cleaned_data["name"],
                     description=profile_form.cleaned_data.get("description", ""),
+                    tagline=profile_form.cleaned_data.get("tagline", ""),
+                    whatsapp_number=profile_form.cleaned_data.get("whatsapp_number", ""),
+                    allow_whatsapp_fallback=profile_form.cleaned_data.get(
+                        "allow_whatsapp_fallback", True
+                    ),
+                    social_links=profile_form.cleaned_data.get("social_links", {}),
                     logo=logo_val,
                     cover_image=cover_val,
                 )
@@ -291,12 +316,26 @@ class StoreSlugUpdateView(
         # Re-render settings page with slug form errors
         can_publish = can_perform_merchant_action(self.membership, MerchantPermission.PUBLISH_STORE)
         merchant_is_active = self.merchant.status == MerchantStatus.ACTIVE
-        profile_form = StoreProfileForm(
-            initial={
-                "name": store.name,
-                "description": store.description,
-            }
-        )
+        initial_profile: dict[str, Any] = {
+            "name": store.name,
+            "description": store.description,
+            "tagline": store.tagline,
+            "whatsapp_number": store.whatsapp_number,
+            "allow_whatsapp_fallback": store.allow_whatsapp_fallback,
+        }
+        if store.social_links and isinstance(store.social_links, dict):
+            for platform in (
+                "instagram",
+                "facebook",
+                "youtube",
+                "twitter_x",
+                "pinterest",
+                "website",
+            ):
+                if platform in store.social_links:
+                    initial_profile[f"social_{platform}"] = store.social_links[platform]
+
+        profile_form = StoreProfileForm(initial=initial_profile)
 
         return render(
             request,

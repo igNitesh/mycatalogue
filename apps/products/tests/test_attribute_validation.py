@@ -296,3 +296,129 @@ class TestProductAttributeValidation:
         }
         with pytest.raises(InvalidProductAttributeError, match="Duplicate color hex"):
             validate_attributes(payload_dup_hex)
+
+    def test_specification_missing_required_fields_rejected(self):
+        # Missing label
+        payload_missing_label = {
+            "specifications": [{"key": "fabric", "type": "text", "value": "Cotton"}]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="must have a string label"):
+            validate_attributes(payload_missing_label)
+
+        # Missing key
+        payload_missing_key = {
+            "specifications": [{"label": "Fabric", "type": "text", "value": "Cotton"}]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="has invalid key 'None'"):
+            validate_attributes(payload_missing_key)
+
+    def test_specification_unauthorized_extra_fields_rejected(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "fabric",
+                    "label": "Fabric",
+                    "type": "text",
+                    "value": "Cotton",
+                    "unauthorized_field": 123,
+                }
+            ]
+        }
+        with pytest.raises(
+            InvalidProductAttributeError, match="contains unauthorized fields for type 'text'"
+        ):
+            validate_attributes(payload)
+
+    def test_specification_non_finite_number_rejected(self):
+        for bad_val in (float("inf"), float("-inf"), float("nan")):
+            payload = {
+                "specifications": [
+                    {"key": "weight", "label": "Weight", "type": "number", "value": bad_val}
+                ]
+            }
+            with pytest.raises(InvalidProductAttributeError, match="must be a finite number"):
+                validate_attributes(payload)
+
+    def test_specification_numeric_boundaries_rejected(self):
+        # Exceeds max 1,000,000,000
+        payload_high = {
+            "specifications": [
+                {"key": "weight", "label": "Weight", "type": "number", "value": 1_000_000_001}
+            ]
+        }
+        with pytest.raises(
+            InvalidProductAttributeError, match="must be between -1,000,000,000 and 1,000,000,000"
+        ):
+            validate_attributes(payload_high)
+
+        # Below min -1,000,000,000
+        payload_low = {
+            "specifications": [
+                {"key": "weight", "label": "Weight", "type": "number", "value": -1_000_000_001}
+            ]
+        }
+        with pytest.raises(
+            InvalidProductAttributeError, match="must be between -1,000,000,000 and 1,000,000,000"
+        ):
+            validate_attributes(payload_low)
+
+    def test_specification_duplicate_options_rejected(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "size",
+                    "label": "Size",
+                    "type": "single_select",
+                    "options": ["Small", "small"],  # Case-insensitive duplicate
+                    "value": "Small",
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="Duplicate option 'small'"):
+            validate_attributes(payload)
+
+    def test_specification_color_unauthorized_fields_and_duplicate_names_rejected(self):
+        # Extra fields in color dict
+        payload_extra = {
+            "specifications": [
+                {
+                    "key": "colors",
+                    "label": "Colors",
+                    "type": "color",
+                    "values": [{"name": "Blue", "hex": "#0000FF", "extra": "forbidden"}],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="Unauthorized fields in color item"):
+            validate_attributes(payload_extra)
+
+        # Duplicate color names
+        payload_dup_name = {
+            "specifications": [
+                {
+                    "key": "colors",
+                    "label": "Colors",
+                    "type": "color",
+                    "values": [
+                        {"name": "Blue", "hex": "#0000FF"},
+                        {"name": "blue", "hex": "#0000AA"},
+                    ],
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="Duplicate color name 'blue'"):
+            validate_attributes(payload_dup_name)
+
+    def test_specification_oversized_text_rejected(self):
+        payload = {
+            "specifications": [
+                {
+                    "key": "origin",
+                    "label": "Origin",
+                    "type": "text",
+                    "value": "x" * 501,
+                }
+            ]
+        }
+        with pytest.raises(InvalidProductAttributeError, match="exceeds 500 characters"):
+            validate_attributes(payload)

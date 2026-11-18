@@ -85,6 +85,18 @@
                 {% endif %}
             </div>
 
+            <!-- Store Tagline -->
+            <div>
+                <label for="{{ form.tagline.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ form.tagline.label }}
+                </label>
+                {{ form.tagline }}
+                <p class="mt-1 text-xs text-slate-500">{{ form.tagline.help_text }}</p>
+                {% if form.tagline.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.tagline.errors.0 }}</p>
+                {% endif %}
+            </div>
+
             <!-- Description -->
             <div>
                 <label for="{{ form.description.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
@@ -93,6 +105,18 @@
                 {{ form.description }}
                 {% if form.description.errors %}
                 <p class="mt-1 text-xs text-red-600">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- WhatsApp Contact Number -->
+            <div>
+                <label for="{{ form.whatsapp_number.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ form.whatsapp_number.label }}
+                </label>
+                {{ form.whatsapp_number }}
+                <p class="mt-1 text-xs text-slate-500">{{ form.whatsapp_number.help_text }}</p>
+                {% if form.whatsapp_number.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ form.whatsapp_number.errors.0 }}</p>
                 {% endif %}
             </div>
 

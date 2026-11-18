@@ -188,11 +188,24 @@
         <!-- Section 2: Pricing & Availability -->
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
             <h2 class="text-base font-semibold text-slate-900 border-b border-slate-100 pb-2">
-                2. Pricing & Availability
+                2. Pricing &amp; Availability
             </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Price -->
+            <!-- Price Display Mode -->
+            <div>
+                <label for="{{ form.price_display_mode.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.price_display_mode.label }}
+                </label>
+                {{ form.price_display_mode }}
+                <p class="mt-1 text-[11px] text-slate-400">{{ form.price_display_mode.help_text }}</p>
+                {% if form.price_display_mode.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.price_display_mode.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Pricing Grid: Price, MRP, Currency -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Selling Price -->
                 <div>
                     <label for="{{ form.price.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
                         {{ form.price.label }}
@@ -208,6 +221,22 @@
                     {% endif %}
                 </div>
 
+                <!-- Maximum Retail Price (MRP) -->
+                <div>
+                    <label for="{{ form.mrp.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                        {{ form.mrp.label }}
+                    </label>
+                    <div class="relative rounded-md shadow-xs">
+                        {{ form.mrp }}
+                    </div>
+                    {% if form.mrp.help_text %}
+                        <p class="mt-1 text-[11px] text-slate-400">{{ form.mrp.help_text }}</p>
+                    {% endif %}
+                    {% if form.mrp.errors %}
+                        <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.mrp.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
                 <!-- Currency -->
                 <div>
                     <label for="{{ form.currency.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
@@ -220,17 +249,15 @@
                 </div>
             </div>
 
-            <!-- Is Available Checkbox -->
-            <div class="pt-2">
-                <label class="flex items-start space-x-2.5 cursor-pointer">
-                    {{ form.is_available }}
-                    <div>
-                        <span class="text-xs font-semibold text-slate-800 block">{{ form.is_available.label }}</span>
-                        <span class="text-[11px] text-slate-500 block">{{ form.is_available.help_text }}</span>
-                    </div>
+            <!-- Availability Status Mode -->
+            <div class="pt-2 border-t border-slate-100">
+                <label for="{{ form.availability_mode.id_for_label }}" class="block text-xs font-semibold text-slate-700 mb-1">
+                    {{ form.availability_mode.label }}
                 </label>
-                {% if form.is_available.errors %}
-                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.is_available.errors.0 }}</p>
+                {{ form.availability_mode }}
+                <p class="mt-1 text-[11px] text-slate-400">{{ form.availability_mode.help_text }}</p>
+                {% if form.availability_mode.errors %}
+                    <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.availability_mode.errors.0 }}</p>
                 {% endif %}
             </div>
         </div>
@@ -280,32 +307,34 @@
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                 <div>
                     <h2 class="text-base font-semibold text-slate-900">
-                        4. Custom Specifications & Attributes
+                        4. Custom Specifications &amp; Attributes
                     </h2>
                     <p class="text-xs text-slate-500 mt-0.5">
-                        Add structured specifications (e.g., Color, Material, Size, Weight, Brand). Maximum 20 scalar attributes.
+                        Add structured specifications (e.g. Text, Numbers with units, Dropdown choices, Color palettes). Maximum 15 specifications.
                     </p>
                 </div>
-                <span id="attr-count-badge" class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                    0 / 20
+                <span id="attr-count-badge" class="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                    0 / 15
                 </span>
             </div>
 
-            <div id="attributes-container" class="space-y-2">
-                <!-- Dynamically rendered attribute rows -->
+            <div id="attributes-container" class="space-y-3">
+                <!-- Dynamically rendered structured specification cards -->
             </div>
 
-            <button
-                type="button"
-                id="add-attribute-btn"
-                onclick="addAttributeRow()"
-                class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
-            >
-                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Specification</span>
-            </button>
+            <div class="flex items-center space-x-2 pt-2">
+                <button
+                    type="button"
+                    id="add-attribute-btn"
+                    onclick="addSpecificationCard()"
+                    class="inline-flex items-center px-3.5 py-2 text-xs font-semibold rounded-md border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-xs transition-colors min-h-[36px]"
+                >
+                    <svg class="w-3.5 h-3.5 mr-1.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Add Specification</span>
+                </button>
+            </div>
 
             {% if form.attributes_json.errors %}
                 <p class="mt-1 text-xs text-rose-600 font-medium">{{ form.attributes_json.errors.0 }}</p>
@@ -341,9 +370,30 @@
 
 </div>
 
-<!-- JavaScript for Dynamic Attributes Editor -->
+<!-- JavaScript for Structured Product Attributes Editor -->
 <script>
-    const MAX_ATTRIBUTES = 20;
+    const MAX_SPECIFICATIONS = 15;
+    let specCounter = 0;
+
+    function slugifyKey(text) {
+        if (!text) return "";
+        let s = text.toString().toLowerCase().trim()
+            .replace(/[^a-z0-9_]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 30);
+        if (s.length === 1) s = s + "_spec";
+        return s;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return "";
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function getInitialAttributes() {
         const input = document.getElementById("{{ form.attributes_json.id_for_label }}");
@@ -358,32 +408,90 @@
     }
 
     function syncAttributesToJson() {
-        const rows = document.querySelectorAll(".attr-row");
-        const attributes = {};
-        rows.forEach(row => {
-            const keyInput = row.querySelector(".attr-key");
-            const valInput = row.querySelector(".attr-value");
-            const key = keyInput.value.trim();
-            const val = valInput.value.trim();
-            if (key) {
-                attributes[key] = val;
+        const cards = document.querySelectorAll(".spec-card");
+        const specifications = [];
+
+        cards.forEach(card => {
+            const type = card.querySelector(".spec-type-select").value;
+            const labelInput = card.querySelector(".spec-label-input");
+            const keyInput = card.querySelector(".spec-key-input");
+
+            const label = labelInput.value.trim();
+            let key = keyInput.value.trim().toLowerCase();
+            if (!key && label) {
+                key = slugifyKey(label);
+                keyInput.value = key;
             }
+
+            if (!label || !key) return;
+
+            const specItem = {
+                key: key,
+                label: label,
+                type: type
+            };
+
+            if (type === "text") {
+                const valInput = card.querySelector(".spec-text-val");
+                specItem.value = valInput ? valInput.value.trim() : "";
+            } else if (type === "number") {
+                const valInput = card.querySelector(".spec-num-val");
+                const unitInput = card.querySelector(".spec-num-unit");
+                const num = valInput && valInput.value !== "" ? parseFloat(valInput.value) : null;
+                if (num !== null && !isNaN(num)) {
+                    specItem.value = num;
+                }
+                const unit = unitInput ? unitInput.value.trim() : "";
+                if (unit) {
+                    specItem.unit = unit;
+                }
+            } else if (type === "single_select") {
+                const optsInput = card.querySelector(".spec-select-opts");
+                const valInput = card.querySelector(".spec-select-val");
+                const options = optsInput ? optsInput.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                specItem.options = Array.from(new Set(options));
+                specItem.value = valInput ? valInput.value.trim() : (specItem.options[0] || "");
+            } else if (type === "multi_select") {
+                const optsInput = card.querySelector(".spec-multi-opts");
+                const valsInput = card.querySelector(".spec-multi-vals");
+                const options = optsInput ? optsInput.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                const values = valsInput ? valsInput.value.split(",").map(s => s.trim()).filter(Boolean) : [];
+                specItem.options = Array.from(new Set(options));
+                specItem.values = Array.from(new Set(values));
+            } else if (type === "color") {
+                const colorPills = card.querySelectorAll(".color-pill");
+                const colorValues = [];
+                colorPills.forEach(pill => {
+                    const cName = pill.dataset.colorName;
+                    const cHex = pill.dataset.colorHex;
+                    if (cName && cHex) {
+                        colorValues.push({ name: cName, hex: cHex });
+                    }
+                });
+                specItem.values = colorValues;
+            }
+
+            specifications.push(specItem);
         });
 
         const jsonInput = document.getElementById("{{ form.attributes_json.id_for_label }}");
         if (jsonInput) {
-            jsonInput.value = JSON.stringify(attributes);
+            if (specifications.length > 0) {
+                jsonInput.value = JSON.stringify({ specifications: specifications });
+            } else {
+                jsonInput.value = "{}";
+            }
         }
 
         const countBadge = document.getElementById("attr-count-badge");
         if (countBadge) {
-            countBadge.innerText = `${rows.length} / ${MAX_ATTRIBUTES}`;
+            countBadge.innerText = `${cards.length} / ${MAX_SPECIFICATIONS}`;
         }
 
         const addBtn = document.getElementById("add-attribute-btn");
         if (addBtn) {
-            addBtn.disabled = rows.length >= MAX_ATTRIBUTES;
-            if (rows.length >= MAX_ATTRIBUTES) {
+            addBtn.disabled = cards.length >= MAX_SPECIFICATIONS;
+            if (cards.length >= MAX_SPECIFICATIONS) {
                 addBtn.classList.add("opacity-50", "cursor-not-allowed");
             } else {
                 addBtn.classList.remove("opacity-50", "cursor-not-allowed");
@@ -391,72 +499,321 @@
         }
     }
 
-    function addAttributeRow(key = "", value = "") {
-        const container = document.getElementById("attributes-container");
-        const rows = container.querySelectorAll(".attr-row");
-        if (rows.length >= MAX_ATTRIBUTES) {
-            alert("Maximum 20 specifications allowed per product.");
+    function renderTypeBody(cardId, type, data = {}) {
+        const bodyContainer = document.getElementById(`spec-body-${cardId}`);
+        if (!bodyContainer) return;
+
+        if (type === "text") {
+            const val = data.value || "";
+            bodyContainer.innerHTML = `
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-600 mb-1">Value (Text)</label>
+                    <input
+                        type="text"
+                        class="spec-text-val w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="e.g. 100% Organic Ring-Spun Cotton"
+                        maxlength="500"
+                        value="${escapeHtml(val)}"
+                        oninput="syncAttributesToJson()"
+                    >
+                </div>
+            `;
+        } else if (type === "number") {
+            const val = data.value !== undefined && data.value !== null ? data.value : "";
+            const unit = data.unit || "";
+            bodyContainer.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Numeric Value</label>
+                        <input
+                            type="number"
+                            step="any"
+                            class="spec-num-val w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. 250"
+                            value="${escapeHtml(val)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Unit of Measurement (Optional)</label>
+                        <input
+                            type="text"
+                            class="spec-num-unit w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. g, ml, cm, oz"
+                            maxlength="15"
+                            value="${escapeHtml(unit)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                </div>
+            `;
+        } else if (type === "single_select") {
+            const options = Array.isArray(data.options) ? data.options.join(", ") : "";
+            const val = data.value || "";
+            bodyContainer.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Allowed Options (Comma-separated)</label>
+                        <input
+                            type="text"
+                            class="spec-select-opts w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. Slim, Regular, Relaxed"
+                            value="${escapeHtml(options)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Selected Value</label>
+                        <input
+                            type="text"
+                            class="spec-select-val w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. Slim"
+                            value="${escapeHtml(val)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                </div>
+            `;
+        } else if (type === "multi_select") {
+            const options = Array.isArray(data.options) ? data.options.join(", ") : "";
+            const vals = Array.isArray(data.values) ? data.values.join(", ") : "";
+            bodyContainer.innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Available Options (Comma-separated)</label>
+                        <input
+                            type="text"
+                            class="spec-multi-opts w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. Waterproof, Breathable, Windproof"
+                            value="${escapeHtml(options)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-slate-600 mb-1">Selected Values (Comma-separated)</label>
+                        <input
+                            type="text"
+                            class="spec-multi-vals w-full px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="e.g. Waterproof, Breathable"
+                            value="${escapeHtml(vals)}"
+                            oninput="syncAttributesToJson()"
+                        >
+                    </div>
+                </div>
+            `;
+        } else if (type === "color") {
+            const colors = Array.isArray(data.values) ? data.values : [];
+            let pillsHtml = "";
+            colors.forEach(c => {
+                pillsHtml += makeColorPillHtml(c.name, c.hex);
+            });
+
+            bodyContainer.innerHTML = `
+                <div class="space-y-2.5">
+                    <div id="colors-list-${cardId}" class="flex flex-wrap gap-2">
+                        ${pillsHtml}
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200">
+                        <div class="flex items-center space-x-1.5">
+                            <input
+                                type="color"
+                                id="color-hex-picker-${cardId}"
+                                value="#191970"
+                                class="h-8 w-8 rounded border border-slate-300 cursor-pointer p-0.5 bg-white"
+                                onchange="document.getElementById('color-hex-text-${cardId}').value = this.value"
+                            >
+                            <input
+                                type="text"
+                                id="color-hex-text-${cardId}"
+                                value="#191970"
+                                maxlength="7"
+                                class="w-20 px-2 py-1 text-xs font-mono rounded-md border border-slate-300 shadow-xs focus:ring-1 focus:ring-indigo-500"
+                                oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('color-hex-picker-${cardId}').value = this.value"
+                            >
+                        </div>
+                        <input
+                            type="text"
+                            id="color-name-${cardId}"
+                            placeholder="Color name (e.g. Navy Blue)"
+                            maxlength="30"
+                            class="flex-1 min-w-[140px] px-3 py-1 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-1 focus:ring-indigo-500"
+                        >
+                        <button
+                            type="button"
+                            onclick="addColorItem('${cardId}')"
+                            class="px-3 py-1 text-xs font-semibold rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 min-h-[32px] transition-colors"
+                        >
+                            + Add Color
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function makeColorPillHtml(name, hex) {
+        return `
+            <span class="color-pill inline-flex items-center pl-1.5 pr-2 py-1 rounded-full text-xs font-medium bg-white border border-slate-200 shadow-2xs space-x-1.5" data-color-name="${escapeHtml(name)}" data-color-hex="${escapeHtml(hex)}">
+                <span class="w-3.5 h-3.5 rounded-full border border-slate-300 flex-shrink-0" style="background-color: ${escapeHtml(hex)};"></span>
+                <span class="text-slate-800 font-semibold">${escapeHtml(name)}</span>
+                <span class="text-slate-400 font-mono text-[10px]">${escapeHtml(hex)}</span>
+                <button type="button" onclick="this.closest('.color-pill').remove(); syncAttributesToJson();" class="text-slate-400 hover:text-rose-600 ml-1">
+                    &times;
+                </button>
+            </span>
+        `;
+    }
+
+    function addColorItem(cardId) {
+        const nameInput = document.getElementById(`color-name-${cardId}`);
+        const hexInput = document.getElementById(`color-hex-text-${cardId}`);
+        const name = (nameInput.value || "").trim();
+        const hex = (hexInput.value || "").trim().toLowerCase();
+
+        if (!name) {
+            alert("Please enter a color name (e.g. Navy Blue).");
+            nameInput.focus();
+            return;
+        }
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+            alert("Color hex must be a 6-character hex code starting with # (e.g. #191970).");
+            hexInput.focus();
             return;
         }
 
-        const row = document.createElement("div");
-        row.className = "attr-row flex items-center gap-2";
-        row.innerHTML = `
-            <input
-                type="text"
-                placeholder="Key (e.g. Color)"
-                maxlength="50"
-                value="${escapeHtml(key)}"
-                class="attr-key flex-1 px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                oninput="syncAttributesToJson()"
-            >
-            <input
-                type="text"
-                placeholder="Value (e.g. Navy Blue)"
-                maxlength="255"
-                value="${escapeHtml(value)}"
-                class="attr-value flex-1 px-3 py-1.5 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                oninput="syncAttributesToJson()"
-            >
-            <button
-                type="button"
-                onclick="removeAttributeRow(this)"
-                class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-                title="Remove attribute"
-                aria-label="Remove attribute"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        `;
-        container.appendChild(row);
-        syncAttributesToJson();
-    }
-
-    function removeAttributeRow(button) {
-        const row = button.closest(".attr-row");
-        if (row) {
-            row.remove();
+        const container = document.getElementById(`colors-list-${cardId}`);
+        if (container) {
+            // Check count
+            if (container.querySelectorAll(".color-pill").length >= 15) {
+                alert("Maximum 15 colors allowed per color specification.");
+                return;
+            }
+            container.insertAdjacentHTML("beforeend", makeColorPillHtml(name, hex));
+            nameInput.value = "";
             syncAttributesToJson();
         }
     }
 
-    function escapeHtml(text) {
-        if (!text) return "";
-        return String(text)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    function addSpecificationCard(data = null) {
+        const container = document.getElementById("attributes-container");
+        const cards = container.querySelectorAll(".spec-card");
+        if (cards.length >= MAX_SPECIFICATIONS) {
+            alert("Maximum 15 specifications allowed per product.");
+            return;
+        }
+
+        specCounter++;
+        const cardId = `spec-${specCounter}`;
+        const type = data && data.type ? data.type : "text";
+        const label = data && data.label ? data.label : "";
+        const key = data && data.key ? data.key : slugifyKey(label);
+
+        const card = document.createElement("div");
+        card.id = cardId;
+        card.className = "spec-card p-3.5 rounded-lg bg-slate-50 border border-slate-200 shadow-2xs space-y-3 transition-all";
+        card.innerHTML = `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-slate-200">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+                    <!-- Type Selector -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Type</label>
+                        <select
+                            class="spec-type-select w-full px-2.5 py-1 text-xs rounded-md border border-slate-300 bg-white shadow-xs focus:ring-1 focus:ring-indigo-500 font-medium text-slate-800"
+                            onchange="renderTypeBody('${cardId}', this.value); syncAttributesToJson();"
+                        >
+                            <option value="text" ${type === "text" ? "selected" : ""}>Text String</option>
+                            <option value="number" ${type === "number" ? "selected" : ""}>Numeric Value</option>
+                            <option value="single_select" ${type === "single_select" ? "selected" : ""}>Single Select</option>
+                            <option value="multi_select" ${type === "multi_select" ? "selected" : ""}>Multi Select</option>
+                            <option value="color" ${type === "color" ? "selected" : ""}>Color Palette</option>
+                        </select>
+                    </div>
+
+                    <!-- Label -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Label (Display)</label>
+                        <input
+                            type="text"
+                            class="spec-label-input w-full px-2.5 py-1 text-xs rounded-md border border-slate-300 shadow-xs focus:ring-1 focus:ring-indigo-500 font-medium"
+                            placeholder="e.g. Fabric, Fit, Weight"
+                            maxlength="50"
+                            value="${escapeHtml(label)}"
+                            oninput="
+                                const keyField = this.closest('.spec-card').querySelector('.spec-key-input');
+                                if (!keyField.dataset.customized) {
+                                    keyField.value = slugifyKey(this.value);
+                                }
+                                syncAttributesToJson();
+                            "
+                        >
+                    </div>
+
+                    <!-- Key -->
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Key Identifier</label>
+                        <input
+                            type="text"
+                            class="spec-key-input w-full px-2.5 py-1 text-xs font-mono rounded-md border border-slate-300 shadow-xs focus:ring-1 focus:ring-indigo-500 text-slate-600"
+                            placeholder="e.g. fabric, fit"
+                            maxlength="30"
+                            value="${escapeHtml(key)}"
+                            oninput="this.dataset.customized = 'true'; this.value = slugifyKey(this.value); syncAttributesToJson();"
+                        >
+                    </div>
+                </div>
+
+                <!-- Delete Card Button -->
+                <button
+                    type="button"
+                    onclick="removeSpecificationCard('${cardId}')"
+                    class="self-end sm:self-center p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors flex-shrink-0"
+                    title="Remove specification"
+                    aria-label="Remove specification"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Dynamic Body by Type -->
+            <div id="spec-body-${cardId}"></div>
+        `;
+
+        container.appendChild(card);
+        renderTypeBody(cardId, type, data || {});
+        syncAttributesToJson();
+    }
+
+    function removeSpecificationCard(cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+            card.remove();
+            syncAttributesToJson();
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function () {
         const initialAttrs = getInitialAttributes();
-        const keys = Object.keys(initialAttrs);
-        if (keys.length > 0) {
-            keys.forEach(k => addAttributeRow(k, initialAttrs[k]));
+
+        if (initialAttrs) {
+            if (Array.isArray(initialAttrs.specifications)) {
+                // Structured specifications format
+                initialAttrs.specifications.forEach(spec => {
+                    addSpecificationCard(spec);
+                });
+            } else if (typeof initialAttrs === "object" && Object.keys(initialAttrs).length > 0) {
+                // Legacy flat key-value dictionary support
+                Object.keys(initialAttrs).forEach(k => {
+                    if (k === "specifications") return;
+                    addSpecificationCard({
+                        key: slugifyKey(k),
+                        label: k,
+                        type: "text",
+                        value: String(initialAttrs[k])
+                    });
+                });
+            }
         }
 
         const form = document.getElementById("product-form");

@@ -103,6 +103,18 @@
                 {% endif %}
             </div>
 
+            <!-- Store Tagline -->
+            <div>
+                <label for="{{ profile_form.tagline.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                    {{ profile_form.tagline.label }}
+                </label>
+                {{ profile_form.tagline }}
+                <p class="mt-1 text-xs text-slate-500">{{ profile_form.tagline.help_text }}</p>
+                {% if profile_form.tagline.errors %}
+                <p class="mt-1 text-xs text-red-600">{{ profile_form.tagline.errors.0 }}</p>
+                {% endif %}
+            </div>
+
             <!-- Description -->
             <div>
                 <label for="{{ profile_form.description.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
@@ -185,6 +197,128 @@
                         {{ profile_form.cover_image }}
                         {% if profile_form.cover_image.errors %}
                         <p class="mt-1 text-xs text-red-600">{{ profile_form.cover_image.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Contact & WhatsApp Support -->
+            <div class="pt-6 border-t border-slate-100 space-y-4">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">
+                        Customer Contact &amp; WhatsApp Support
+                    </h3>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                        Enable direct chat and order fallback for customers visiting your digital storefront.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- WhatsApp Number -->
+                    <div>
+                        <label for="{{ profile_form.whatsapp_number.id_for_label }}" class="block text-xs sm:text-sm font-medium text-slate-700 mb-1">
+                            {{ profile_form.whatsapp_number.label }}
+                        </label>
+                        {{ profile_form.whatsapp_number }}
+                        <p class="mt-1 text-xs text-slate-500">{{ profile_form.whatsapp_number.help_text }}</p>
+                        {% if profile_form.whatsapp_number.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.whatsapp_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- WhatsApp Fallback Checkbox -->
+                    <div class="flex items-start p-3.5 rounded-lg bg-emerald-50/50 border border-emerald-100">
+                        <div class="flex items-center h-5">
+                            {{ profile_form.allow_whatsapp_fallback }}
+                        </div>
+                        <div class="ml-3 text-xs">
+                            <label for="{{ profile_form.allow_whatsapp_fallback.id_for_label }}" class="font-semibold text-slate-800 cursor-pointer">
+                                {{ profile_form.allow_whatsapp_fallback.label }}
+                            </label>
+                            <p class="text-slate-500 mt-0.5">{{ profile_form.allow_whatsapp_fallback.help_text }}</p>
+                            {% if profile_form.allow_whatsapp_fallback.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ profile_form.allow_whatsapp_fallback.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Media & Web Presence -->
+            <div class="pt-6 border-t border-slate-100 space-y-4">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">
+                        Social Media &amp; Online Presence
+                    </h3>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                        Connect your brand profiles to display verified social links to storefront visitors. All URLs must use secure HTTPS.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Instagram -->
+                    <div>
+                        <label for="{{ profile_form.social_instagram.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            Instagram
+                        </label>
+                        {{ profile_form.social_instagram }}
+                        {% if profile_form.social_instagram.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_instagram.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Facebook -->
+                    <div>
+                        <label for="{{ profile_form.social_facebook.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            Facebook
+                        </label>
+                        {{ profile_form.social_facebook }}
+                        {% if profile_form.social_facebook.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_facebook.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- YouTube -->
+                    <div>
+                        <label for="{{ profile_form.social_youtube.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            YouTube
+                        </label>
+                        {{ profile_form.social_youtube }}
+                        {% if profile_form.social_youtube.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_youtube.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- X / Twitter -->
+                    <div>
+                        <label for="{{ profile_form.social_twitter_x.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            X (formerly Twitter)
+                        </label>
+                        {{ profile_form.social_twitter_x }}
+                        {% if profile_form.social_twitter_x.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_twitter_x.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pinterest -->
+                    <div>
+                        <label for="{{ profile_form.social_pinterest.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            Pinterest
+                        </label>
+                        {{ profile_form.social_pinterest }}
+                        {% if profile_form.social_pinterest.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_pinterest.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Official Website -->
+                    <div>
+                        <label for="{{ profile_form.social_website.id_for_label }}" class="block text-xs font-medium text-slate-700 mb-1">
+                            Official Website
+                        </label>
+                        {{ profile_form.social_website }}
+                        {% if profile_form.social_website.errors %}
+                        <p class="mt-1 text-xs text-red-600">{{ profile_form.social_website.errors.0 }}</p>
                         {% endif %}
                     </div>
                 </div>

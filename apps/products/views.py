@@ -202,16 +202,13 @@ class ProductCreateView(MerchantCatalogueBaseView):
                     sku=form.cleaned_data.get("sku"),
                     description=form.cleaned_data.get("description", ""),
                     price=form.cleaned_data.get("price"),
+                    mrp=form.cleaned_data.get("mrp"),
+                    price_display_mode=form.cleaned_data.get("price_display_mode"),
                     currency=form.cleaned_data.get("currency"),
+                    availability_mode=form.cleaned_data.get("availability_mode"),
                     category_ids=category_ids,
                     attributes=form.cleaned_data.get("attributes_json", {}),
                 )
-                if not form.cleaned_data.get("is_available", True):
-                    update_product_profile(
-                        product_id=product.id,
-                        actor=request.user,
-                        is_available=False,
-                    )
 
                 messages.success(
                     request,
@@ -259,7 +256,10 @@ class ProductEditView(MerchantCatalogueBaseView):
                 "sku": product.sku,
                 "description": product.description,
                 "price": product.price,
+                "mrp": product.mrp,
+                "price_display_mode": product.price_display_mode,
                 "currency": product.currency,
+                "availability_mode": product.availability_mode,
                 "is_available": product.is_available,
             },
         )
@@ -300,9 +300,11 @@ class ProductEditView(MerchantCatalogueBaseView):
                     name=form.cleaned_data["name"],
                     description=form.cleaned_data.get("description", ""),
                     price=form.cleaned_data.get("price"),
+                    mrp=form.cleaned_data.get("mrp"),
+                    price_display_mode=form.cleaned_data.get("price_display_mode"),
                     currency=form.cleaned_data.get("currency"),
                     sku=form.cleaned_data.get("sku"),
-                    is_available=form.cleaned_data.get("is_available", True),
+                    availability_mode=form.cleaned_data.get("availability_mode"),
                     attributes=form.cleaned_data.get("attributes_json", {}),
                 )
 

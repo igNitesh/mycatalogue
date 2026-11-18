@@ -9,13 +9,14 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.merchants.models import Merchant
 
-from .choices import Currency
+from .choices import AvailabilityMode, Currency, PriceDisplayMode, ProductStatus
 from .exceptions import InvalidProductAttributeError, InvalidProductImageError
 from .models import Category, Product
 from .validators import (
     validate_and_normalize_slug,
     validate_attributes,
     validate_product_image,
+    validate_product_pricing,
 )
 
 FORM_CONTROL_CLASS = (
@@ -87,7 +88,7 @@ class ProductForm(forms.Form):
         ),
     )
     price = forms.DecimalField(
-        label=_("Price"),
+        label=_("Selling Price"),
         max_digits=12,
         decimal_places=2,
         min_value=Decimal("0.00"),
@@ -100,7 +101,33 @@ class ProductForm(forms.Form):
                 "min": "0.00",
             }
         ),
-        help_text=_("Leave blank if price is on request."),
+        help_text=_(
+            "Customer selling price. Mandatory when Show Price is selected on published items."
+        ),
+    )
+    mrp = forms.DecimalField(
+        label=_("Maximum Retail Price (MRP)"),
+        max_digits=12,
+        decimal_places=2,
+        min_value=Decimal("0.00"),
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "class": FORM_CONTROL_CLASS,
+                "placeholder": "0.00",
+                "step": "0.01",
+                "min": "0.00",
+            }
+        ),
+        help_text=_("Anchor price for discount strike-through. Must be >= Selling Price."),
+    )
+    price_display_mode = forms.ChoiceField(
+        label=_("Price Display Mode"),
+        choices=PriceDisplayMode.choices,
+        initial=PriceDisplayMode.SHOW_PRICE,
+        required=False,
+        widget=forms.Select(attrs={"class": FORM_CONTROL_CLASS}),
+        help_text=_("Choose whether to display the numeric price or prompt customers to contact."),
     )
     currency = forms.ChoiceField(
         label=_("Currency"),
@@ -108,6 +135,16 @@ class ProductForm(forms.Form):
         initial=Currency.INR,
         required=True,
         widget=forms.Select(attrs={"class": FORM_CONTROL_CLASS}),
+    )
+    availability_mode = forms.ChoiceField(
+        label=_("Availability Status"),
+        choices=AvailabilityMode.choices,
+        initial=AvailabilityMode.IN_STOCK,
+        required=False,
+        widget=forms.Select(attrs={"class": FORM_CONTROL_CLASS}),
+        help_text=_(
+            "In Stock: immediately purchasable. Made to Order: custom production. Out of Stock: displayed in catalog as unavailable."
+        ),
     )
     is_available = forms.BooleanField(
         label=_("Available for purchase"),
@@ -118,7 +155,7 @@ class ProductForm(forms.Form):
                 "class": "h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             }
         ),
-        help_text=_("Uncheck if temporarily out of stock (item remains visible in catalogue)."),
+        help_text=_("Legacy availability indicator."),
     )
     categories = forms.ModelMultipleChoiceField(
         label=_("Categories"),
@@ -158,6 +195,10 @@ class ProductForm(forms.Form):
                 self.fields["categories"].initial = list(
                     product.categories.values_list("id", flat=True)
                 )
+                self.fields["mrp"].initial = product.mrp
+                self.fields["price_display_mode"].initial = product.price_display_mode
+                self.fields["availability_mode"].initial = product.availability_mode
+                self.fields["is_available"].initial = product.is_available
                 if product.attributes:
                     self.fields["attributes_json"].initial = json.dumps(product.attributes)
         else:
@@ -197,6 +238,54 @@ class ProductForm(forms.Form):
             return validate_attributes(parsed)
         except InvalidProductAttributeError as exc:
             raise ValidationError(str(exc)) from exc
+
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = super().clean()
+        price = cleaned_data.get("price")
+        mrp = cleaned_data.get("mrp")
+        mode = cleaned_data.get("price_display_mode")
+
+        # Resolve availability_mode from data or legacy is_available
+        avail_mode = cleaned_data.get("availability_mode")
+        legacy_avail = self.data.get("is_available")
+        if not avail_mode:
+            if legacy_avail is not None:
+                is_on = legacy_avail in (True, "true", "True", "on", "1", 1)
+                avail_mode = AvailabilityMode.IN_STOCK if is_on else AvailabilityMode.OUT_OF_STOCK
+            else:
+                avail_mode = AvailabilityMode.IN_STOCK
+        cleaned_data["availability_mode"] = avail_mode
+        cleaned_data["is_available"] = avail_mode != AvailabilityMode.OUT_OF_STOCK
+
+        # Resolve price_display_mode default if not provided
+        if not mode:
+            mode = (
+                PriceDisplayMode.SHOW_PRICE
+                if price is not None
+                else PriceDisplayMode.CONTACT_FOR_PRICE
+            )
+            cleaned_data["price_display_mode"] = mode
+
+        # Pricing domain validation
+        status = self.product.status if self.product else ProductStatus.DRAFT
+        try:
+            validate_product_pricing(
+                price=price,
+                mrp=mrp,
+                price_display_mode=mode,
+                status=status,
+            )
+        except ValidationError as exc:
+            if hasattr(exc, "message_dict"):
+                for field, errs in exc.message_dict.items():
+                    self.add_error(field, errs)
+            elif hasattr(exc, "messages"):
+                for msg in exc.messages:
+                    self.add_error(None, msg)
+            else:
+                self.add_error(None, str(exc))
+
+        return cleaned_data
 
 
 class CategoryForm(forms.Form):
