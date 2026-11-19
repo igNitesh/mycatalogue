@@ -1,0 +1,128 @@
+<footer class="bg-surface-container-lowest border-t border-outline-variant/30 text-on-surface mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+            <!-- Column 1: Store Brand & Identity -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    {% if store.logo %}
+                        <img src="{{ store.logo.url }}" alt="{{ store.name }} logo" class="w-9 h-9 rounded-xl object-cover border border-outline-variant/30 shadow-xs">
+                    {% else %}
+                        <div class="w-9 h-9 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm font-headline shadow-xs" aria-hidden="true">
+                            {{ store.name|slice:":2"|upper }}
+                        </div>
+                    {% endif %}
+                    <span class="text-base sm:text-lg font-bold font-headline tracking-tight text-on-surface">
+                        {{ store.name }}
+                    </span>
+                </div>
+
+                {% if store.tagline %}
+                    <p class="text-xs sm:text-sm font-medium text-primary">
+                        {{ store.tagline }}
+                    </p>
+                {% endif %}
+
+                {% if store.description %}
+                    <p class="text-xs sm:text-sm text-on-surface-variant line-clamp-3 leading-relaxed">
+                        {{ store.description }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Column 2: Merchant & Location Info -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-headline">
+                    Merchant Details
+                </h3>
+                <div class="space-y-2 text-xs sm:text-sm text-on-surface-variant">
+                    <p class="font-medium text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">store</span>
+                        <span>{{ store.merchant.name }}</span>
+                    </p>
+                    {% if store.merchant.city or store.merchant.state %}
+                        <p class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">location_on</span>
+                            <span>{{ store.merchant.city }}{% if store.merchant.city and store.merchant.state %}, {% endif %}{{ store.merchant.state }}</span>
+                        </p>
+                    {% endif %}
+                    {% if store.merchant.contact_number %}
+                        <p class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">call</span>
+                            <a href="tel:{{ store.merchant.contact_number }}" class="hover:text-primary transition-colors focus:outline-none focus:underline">
+                                {{ store.merchant.contact_number }}
+                            </a>
+                        </p>
+                    {% endif %}
+                    {% if store.merchant.email %}
+                        <p class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">mail</span>
+                            <a href="mailto:{{ store.merchant.email }}" class="hover:text-primary transition-colors truncate max-w-[240px] focus:outline-none focus:underline">
+                                {{ store.merchant.email }}
+                            </a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Column 3: Connect & Social Presence -->
+            <div class="space-y-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-headline">
+                    Connect With Us
+                </h3>
+                {% if store.social_links %}
+                    <p class="text-xs text-on-surface-variant">
+                        Follow our profiles for catalogue updates:
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        {% if store.social_links.instagram %}
+                            <a href="{{ store.social_links.instagram }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} on Instagram">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                            </a>
+                        {% endif %}
+                        {% if store.social_links.facebook %}
+                            <a href="{{ store.social_links.facebook }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} on Facebook">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                            </a>
+                        {% endif %}
+                        {% if store.social_links.youtube %}
+                            <a href="{{ store.social_links.youtube }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} on YouTube">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            </a>
+                        {% endif %}
+                        {% if store.social_links.twitter_x %}
+                            <a href="{{ store.social_links.twitter_x }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} on X (Twitter)">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                            </a>
+                        {% endif %}
+                        {% if store.social_links.pinterest %}
+                            <a href="{{ store.social_links.pinterest }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} on Pinterest">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0a12 12 0 0 0-4.37 23.17c-.07-.95-.14-2.42.03-3.46.16-.94 1.01-4.28 1.01-4.28s-.26-.52-.26-1.28c0-1.2.7-2.1 1.57-2.1.74 0 1.1.56 1.1 1.22 0 .75-.47 1.86-.72 2.89-.2.87.43 1.58 1.29 1.58 1.55 0 2.74-1.63 2.74-3.99 0-2.09-1.5-3.55-3.64-3.55-2.48 0-3.93 1.86-3.93 3.78 0 .75.29 1.55.65 1.99.07.09.08.17.06.26-.07.28-.22.9-.25 1.03-.04.17-.14.21-.32.13-1.2-.56-1.95-2.31-1.95-3.72 0-3.03 2.2-5.81 6.35-5.81 3.33 0 5.92 2.37 5.92 5.55 0 3.31-2.09 5.98-4.99 5.98-.97 0-1.89-.51-2.2-.11l-.6 2.28c-.22.84-.81 1.9-1.21 2.54A12 12 0 1 0 12 0z"/></svg>
+                            </a>
+                        {% endif %}
+                        {% if store.social_links.website %}
+                            <a href="{{ store.social_links.website }}" target="_blank" rel="noopener noreferrer" class="w-9 h-9 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-primary flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-primary shadow-xs" aria-label="Visit {{ store.name }} official website">
+                                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">language</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <p class="text-xs sm:text-sm text-on-surface-variant">
+                        Browse our published digital catalogue online.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sub-footer / Attestation & Copyright -->
+        <div class="border-t border-outline-variant/20 pt-6 mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-on-surface-variant">
+            <p>
+                &copy; {% now "Y" %} {{ store.name }}. All rights reserved.
+            </p>
+            <p class="flex items-center gap-1">
+                <span>Powered by</span>
+                <span class="font-bold text-primary font-headline tracking-tight">mycatalogue</span>
+            </p>
+        </div>
+    </div>
+</footer>
+

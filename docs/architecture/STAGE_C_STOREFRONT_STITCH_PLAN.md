@@ -50,7 +50,7 @@ To prevent misleading consumer expectations and preserve platform integrity, the
 ### Permitted Content (Backed by Real Merchant Data)
 - **Store Identity:** `Store.name`, `Store.tagline`, `Store.description`, `Store.logo`, `Store.cover_image`.
 - **Location & Contact:** `Merchant.city`, `Merchant.state` (publicly safe location data; exact street address and PIN code withheld for privacy).
-- **Social Presence:** `Store.social_links` (Instagram, Facebook, YouTube, Twitter/X, LinkedIn, Website).
+- **Social Presence:** `Store.social_links` (supported platforms: Instagram, Facebook, YouTube, Twitter/X, Pinterest, Website — matching `ALLOWED_SOCIAL_PLATFORMS` in `apps/stores/validators.py`).
 - **Product Details:** `Product.name`, `Product.sku`, `Product.description`, `Product.price`, `Product.mrp`, `Product.price_display_mode`, `Product.availability_mode`, `Product.attributes`, `ProductImage` gallery.
 - **WhatsApp Inquiry:** Authorized inquiry link constructed from `Store.whatsapp_number` (with fallback to `Merchant.contact_number`).
 

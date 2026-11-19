@@ -157,9 +157,17 @@ def get_category_for_merchant(
         return None
 
 
+ALLOWED_PUBLIC_PRODUCT_ORDERING = {
+    "name": ("name",),
+    "newest": ("-created_at",),
+    "-created_at": ("-created_at",),
+}
+
+
 def get_public_storefront_products(
     merchant: Merchant,
     category_slug: str | None = None,
+    ordering: str = "name",
 ) -> QuerySet[Product]:
     """
     Returns published products for customer-facing digital storefront browsing.
@@ -170,7 +178,12 @@ def get_public_storefront_products(
     3. Product status must be strictly PUBLISHED.
     4. Note: availability_mode=OUT_OF_STOCK (is_available=False) does NOT hide the product; it displays with an out-of-stock badge.
     5. If category_slug is provided, the category must belong to this merchant and be active.
+    6. Ordering parameter is strictly whitelisted against ALLOWED_PUBLIC_PRODUCT_ORDERING.
     """
+    if ordering not in ALLOWED_PUBLIC_PRODUCT_ORDERING:
+        allowed = ", ".join(sorted(ALLOWED_PUBLIC_PRODUCT_ORDERING.keys()))
+        raise ValueError(f"Invalid ordering '{ordering}'. Allowed choices: {allowed}")
+
     if not merchant or merchant.status != MerchantStatus.ACTIVE:
         return Product.objects.none()
 
@@ -178,6 +191,8 @@ def get_public_storefront_products(
     store = getattr(merchant, "store", None)
     if not store or store.status != StoreStatus.PUBLISHED or not store.is_publicly_accessible:
         return Product.objects.none()
+
+    order_by_fields = ALLOWED_PUBLIC_PRODUCT_ORDERING[ordering]
 
     qs = (
         Product.objects.filter(
@@ -195,7 +210,7 @@ def get_public_storefront_products(
                 queryset=Category.objects.filter(is_active=True),
             ),
         )
-        .order_by("name")
+        .order_by(*order_by_fields)
     )
 
     if category_slug:

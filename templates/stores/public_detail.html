@@ -1,42 +1,322 @@
-{% extends "base.html" %}
+{% extends "storefront/base.html" %}
 
-{% block title %}{{ store.name }} | mycatalogue{% endblock %}
+{% block title %}{{ store.name }}{% if store.tagline %} — {{ store.tagline }}{% endif %} | mycatalogue{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-    <div class="bg-white shadow rounded-lg overflow-hidden border border-slate-200">
-        {% if store.cover_image %}
-            <div class="h-48 w-full bg-slate-100 overflow-hidden">
-                <img src="{{ store.cover_image.url }}" alt="{{ store.name }} cover" class="w-full h-full object-cover">
-            </div>
-        {% endif %}
-        <div class="p-6 sm:p-8">
-            <div class="flex items-center space-x-4 mb-4">
-                {% if store.logo %}
-                    <img src="{{ store.logo.url }}" alt="{{ store.name }} logo" class="w-16 h-16 rounded-full object-cover border border-slate-200">
-                {% endif %}
-                <div>
-                    <h1 class="text-2xl font-bold text-slate-900">{{ store.name }}</h1>
-                    <p class="text-sm text-slate-500 font-mono">/s/{{ store.slug }}/</p>
+<!-- 1. Hero / Branding Showcase Section (Full-Width Editorial Stitch Layout) -->
+<section aria-label="Store Showcase" class="relative w-full overflow-hidden bg-inverse-surface text-on-primary shadow-sm border-b border-outline-variant/20">
+    <!-- Cover Image Atmospheric Background / Gradient Fallback -->
+    {% if store.cover_image %}
+        <div class="absolute inset-0 bg-cover bg-center mix-blend-luminosity opacity-25" style="background-image: url('{{ store.cover_image.url }}');" aria-hidden="true"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-inverse-surface via-inverse-surface/90 to-inverse-surface/50"></div>
+    {% else %}
+        <div class="absolute inset-0 bg-gradient-to-br from-inverse-surface via-[#18283b] to-[#0d1a29]"></div>
+        <div class="absolute right-0 bottom-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none" aria-hidden="true"></div>
+    {% endif %}
+
+    <!-- Hero Editorial Content Grid (Centered Container, Full-Width Responsive Grid) -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
+            <!-- Left Editorial Column -->
+            <div class="lg:col-span-7 xl:col-span-8 space-y-4 sm:space-y-5">
+                <!-- Location & Inventory Metadata Capsules -->
+                <div class="flex flex-wrap items-center gap-2">
+                    {% if store.merchant.city or store.merchant.state %}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-inverse-primary font-badge text-xs tracking-wider backdrop-blur-sm border border-white/10">
+                            <span class="material-symbols-outlined text-[14px]" aria-hidden="true">location_on</span>
+                            <span class="uppercase font-semibold">{{ store.merchant.city }}{% if store.merchant.city and store.merchant.state %}, {% endif %}{{ store.merchant.state }}</span>
+                        </span>
+                    {% endif %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white font-badge text-xs tracking-wider backdrop-blur-sm border border-white/10">
+                        <span class="w-2 h-2 rounded-full bg-tertiary-fixed animate-pulse"></span>
+                        <span>{{ total_products }} Product{{ total_products|pluralize }} Online</span>
+                    </span>
+                </div>
+
+                <!-- Main Store Title & Tagline -->
+                <div class="space-y-2">
+                    <h1 class="font-headline text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+                        {{ store.name }}
+                        {% if store.tagline %}
+                            <span class="block text-xl sm:text-2xl lg:text-3xl font-medium text-inverse-primary mt-1 font-headline">
+                                {{ store.tagline }}
+                            </span>
+                        {% endif %}
+                    </h1>
+                    {% if store.description %}
+                        <p class="text-sm sm:text-base lg:text-lg text-surface-container-high/90 max-w-2xl leading-relaxed line-clamp-3">
+                            {{ store.description }}
+                        </p>
+                    {% else %}
+                        <p class="text-sm sm:text-base text-surface-container-high/80 max-w-xl leading-relaxed">
+                            Browse our verified digital collection of curated products directly from {{ store.name }}{% if store.merchant.city %} in {{ store.merchant.city }}{% endif %}.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Conversion & Contact Actions -->
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-container-lowest text-on-surface font-headline font-bold text-xs sm:text-sm shadow-md hover:bg-surface-container transition-all focus:outline-none focus:ring-2 focus:ring-white">
+                        <span class="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">view_carousel</span>
+                        <span>Browse All Products</span>
+                    </a>
+                    {% if store.merchant.contact_number %}
+                        <a href="tel:{{ store.merchant.contact_number }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/15 hover:bg-white/20 text-white font-headline font-semibold text-xs sm:text-sm border border-white/20 backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-white">
+                            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">call</span>
+                            <span>Call Merchant</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
 
-            {% if store.description %}
-                <div class="text-slate-700 mb-6 prose">
-                    {{ store.description|linebreaks }}
-                </div>
-            {% endif %}
+            <!-- Right Column: Storefront Identity Card with Owner & Timing Details -->
+            <div class="lg:col-span-5 xl:col-span-4 w-full">
+                <div class="bg-surface-container-lowest text-on-surface rounded-2xl p-5 sm:p-6 shadow-xl border border-outline-variant/30 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-badge text-[11px] uppercase tracking-wider text-secondary font-semibold">Store Profile</span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-surface-container text-on-surface-variant">
+                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                            <span>Active Storefront</span>
+                        </span>
+                    </div>
 
-            <div class="border-t border-slate-100 pt-4 mt-6">
-                <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Merchant Details</h2>
-                <div class="text-sm text-slate-600 space-y-1">
-                    <p><span class="font-medium text-slate-700">Business:</span> {{ store.merchant.name }}</p>
-                    <p><span class="font-medium text-slate-700">Contact:</span> {{ store.merchant.contact_number }}</p>
-                    <p><span class="font-medium text-slate-700">Email:</span> {{ store.merchant.email }}</p>
-                    <p><span class="font-medium text-slate-700">Location:</span> {{ store.merchant.city }}, {{ store.merchant.state }}</p>
+                    <!-- Owner / Proprietor Details -->
+                    <div class="flex items-center gap-3.5 pt-1">
+                        <div class="w-12 h-12 rounded-xl bg-surface-container-high text-primary flex items-center justify-center font-bold text-lg font-headline shadow-xs shrink-0" aria-hidden="true">
+                            <span class="material-symbols-outlined text-[24px]" aria-hidden="true">person</span>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="font-headline font-bold text-base sm:text-lg text-on-surface truncate">
+                                {{ owner_name|default:store.merchant.name }}
+                            </h2>
+                            <p class="text-xs text-secondary truncate mt-0.5">
+                                Proprietor &amp; Store Owner
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Store Opening & Closing Hours (Stitch Reference) -->
+                    <div class="bg-surface-container-low rounded-xl p-3 flex items-center justify-between text-on-surface text-xs">
+                        <span class="flex items-center gap-1.5 text-secondary">
+                            <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">schedule</span>
+                            <span class="font-medium">10:00 AM – 8:30 PM</span>
+                        </span>
+                        <span class="text-tertiary font-semibold flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                            <span>Open Today</span>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</section>
+
+<!-- Main Storefront Sections Container -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
+
+    {# 2. Shop by Category Section (Rendered when categories exist) #}
+    {% if categories %}
+        <section aria-labelledby="categories-heading">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-5 sm:mb-6">
+                <div>
+                    <span class="font-badge text-primary text-xs uppercase tracking-widest font-semibold block mb-0.5">Department Selection</span>
+                    <h2 id="categories-heading" class="text-xl sm:text-2xl lg:text-3xl font-bold font-headline text-on-surface tracking-tight">
+                        Shop by Category
+                    </h2>
+                    <p class="text-xs sm:text-sm text-secondary mt-0.5">
+                        Explore our curated collections crafted by {{ store.name }}
+                    </p>
+                </div>
+                <span class="hidden sm:inline-block font-badge text-xs text-outline">
+                    {{ categories|length }} Categor{{ categories|length|pluralize:"y,ies" }} Available
+                </span>
+            </div>
+
+            <!-- Responsive Category Grid (Horizontal snap scroll on mobile, grid on desktop) -->
+            <div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4 lg:gap-5 sm:pb-0">
+                {% for category in categories %}
+                    <a href="{% if store.slug %}/s/{{ store.slug }}/products/?category={{ category.slug }}{% else %}#{% endif %}" class="snap-start shrink-0 w-36 sm:w-auto group flex flex-col rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 overflow-hidden transition-all shadow-xs hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary">
+                        <div class="h-40 sm:h-48 lg:h-52 w-full bg-surface-container-low overflow-hidden relative">
+                            {% if category.image %}
+                                <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-primary/40 group-hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined text-4xl" aria-hidden="true">category</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="p-3 sm:p-3.5 flex flex-col flex-1 justify-between bg-surface-container-lowest gap-2">
+                            <div>
+                                <h3 class="font-headline font-bold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors truncate">
+                                    {{ category.name }}
+                                </h3>
+                            </div>
+                            <div class="flex items-center justify-between text-primary font-semibold text-[11px] sm:text-xs">
+                                <span>View Collection</span>
+                                <span class="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform" aria-hidden="true">arrow_forward</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    <!-- 3. Latest Products Section (Editorial Fashion Portrait Cards) -->
+    <section aria-labelledby="latest-products-heading">
+        <div class="flex items-center justify-between mb-5 sm:mb-6">
+            <div>
+                <span class="font-badge text-primary text-xs uppercase tracking-wider font-semibold block mb-0.5">Curator's Highlights</span>
+                <h2 id="latest-products-heading" class="text-xl sm:text-2xl lg:text-3xl font-bold font-headline text-on-surface tracking-tight">
+                    Latest Products
+                </h2>
+                <p class="text-xs sm:text-sm text-secondary mt-0.5">
+                    Discover the latest additions to our collection
+                </p>
+            </div>
+            <div>
+                <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:text-primary-container transition-colors focus:outline-none focus:underline">
+                    <span>View All</span>
+                    <span class="material-symbols-outlined text-[16px]" aria-hidden="true">chevron_right</span>
+                </a>
+            </div>
+        </div>
+
+        {% if latest_products %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-5 md:gap-6">
+                {% for product in latest_products %}
+                    <div class="rounded-2xl bg-surface-container-lowest border border-outline-variant/30 overflow-hidden transition-all shadow-xs hover:shadow-md flex flex-col group">
+                        <!-- Portrait Image Container (Aspect 3/4) with Availability Badge -->
+                        <div class="aspect-[3/4] w-full bg-surface-container-low overflow-hidden relative">
+                            {% if product.primary_images %}
+                                <img src="{{ product.primary_images.0.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            {% elif product.primary_image %}
+                                <img src="{{ product.primary_image.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-outline/40">
+                                    <span class="material-symbols-outlined text-4xl" aria-hidden="true">inventory_2</span>
+                                </div>
+                            {% endif %}
+
+                            <!-- Availability Badge -->
+                            <div class="absolute top-2.5 left-2.5">
+                                {% if product.availability_mode == "IN_STOCK" %}
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 text-tertiary font-badge text-[10px] sm:text-[11px] font-bold shadow-xs backdrop-blur-sm border border-tertiary/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                        <span>In Stock</span>
+                                    </span>
+                                {% elif product.availability_mode == "MADE_TO_ORDER" %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50/95 text-amber-800 font-badge text-[10px] sm:text-[11px] font-bold shadow-xs backdrop-blur-sm border border-amber-200">
+                                        <span class="material-symbols-outlined text-[13px]" aria-hidden="true">handyman</span>
+                                        <span>Made to Order</span>
+                                    </span>
+                                {% elif product.availability_mode == "OUT_OF_STOCK" %}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100/95 text-slate-700 font-badge text-[10px] sm:text-[11px] font-bold shadow-xs backdrop-blur-sm border border-slate-300">
+                                        <span>Out of Stock</span>
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Discount Pill (Top Right, when applicable) -->
+                            {% if product.price_display_mode != "CONTACT_FOR_PRICE" and product.mrp and product.price and product.mrp > product.price and product.discount_percentage %}
+                                <span class="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-error-container text-on-error-container font-badge text-[10px] sm:text-[11px] font-bold shadow-xs">
+                                    {{ product.discount_percentage }}% OFF
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Card Content -->
+                        <div class="p-3.5 sm:p-4 flex flex-col flex-1 justify-between gap-2.5">
+                            <div class="space-y-1">
+                                {% if product.categories.all %}
+                                    <span class="text-[11px] font-medium text-secondary truncate block">
+                                        {{ product.categories.all.0.name }}
+                                    </span>
+                                {% endif %}
+
+                                <h3 class="font-headline font-bold text-xs sm:text-sm text-on-surface line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                                    {{ product.name }}
+                                </h3>
+
+                                {% if product.sku %}
+                                    <p class="text-[10px] font-mono text-outline">SKU: {{ product.sku }}</p>
+                                {% endif %}
+                            </div>
+
+                            <!-- Pricing Block (Strict Privacy for CONTACT_FOR_PRICE) -->
+                            <div class="pt-2 border-t border-outline-variant/15 flex items-baseline justify-between gap-1 flex-wrap">
+                                {% if product.price_display_mode == "CONTACT_FOR_PRICE" or not product.price %}
+                                    <span class="font-headline font-bold text-xs sm:text-sm text-primary">Contact for Price</span>
+                                {% else %}
+                                    <div class="flex items-baseline gap-1.5 flex-wrap">
+                                        <span class="font-price font-bold text-base sm:text-lg text-on-surface">
+                                            ₹{{ product.price|floatformat:0 }}
+                                        </span>
+                                        {% if product.mrp and product.mrp > product.price %}
+                                            <span class="font-price text-xs sm:text-sm text-outline line-through">
+                                                ₹{{ product.mrp|floatformat:0 }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty Products State -->
+            <div class="rounded-2xl border border-dashed border-outline-variant/60 p-8 sm:p-12 text-center bg-surface-container-low/40">
+                <span class="material-symbols-outlined text-4xl text-outline mb-2 inline-block" aria-hidden="true">inventory_2</span>
+                <h3 class="text-sm sm:text-base font-bold text-on-surface font-headline">Catalogue Coming Soon</h3>
+                <p class="text-xs sm:text-sm text-secondary max-w-md mx-auto mt-1">
+                    Our digital catalogue is currently being curated. Please check back soon for our latest arrivals.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- 4. Browse All Products Banner Section (Showroom Inspiration) -->
+    <section aria-label="Explore Full Catalogue">
+        <div class="rounded-3xl bg-surface-container-low/80 border border-outline-variant/30 p-6 sm:p-8 md:p-10 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-2 text-center md:text-left max-w-2xl">
+                <span class="font-badge text-primary text-xs uppercase tracking-wider font-semibold block">Digital Catalogue</span>
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold font-headline text-on-surface tracking-tight">
+                    Explore the Entire {{ store.name }} Catalogue
+                </h2>
+                <p class="text-xs sm:text-sm text-secondary leading-relaxed">
+                    Browse all available articles across categories, view collections, and get in touch with us for availability and orders.
+                </p>
+                <div class="flex flex-wrap justify-center md:justify-start gap-2 pt-1 text-xs text-on-surface-variant">
+                    <span class="px-2.5 py-1 rounded-lg bg-surface-container-lowest font-medium">✓ Direct Merchant Catalogue</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-surface-container-lowest font-medium">✓ Real-time Inventory</span>
+                    <span class="px-2.5 py-1 rounded-lg bg-surface-container-lowest font-medium">✓ Custom Orders</span>
+                </div>
+            </div>
+            <div class="shrink-0">
+                <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-headline font-bold text-xs sm:text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary">
+                    <span class="material-symbols-outlined text-[20px]" aria-hidden="true">storefront</span>
+                    <span>View All Products</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Store Description & Heritage Section (Rendered if description provided) -->
+    {% if store.description %}
+        <section aria-labelledby="about-heading">
+            <div class="rounded-3xl bg-surface-container-lowest border border-outline-variant/30 p-6 sm:p-8 md:p-10 shadow-xs">
+                <span class="font-badge text-primary text-xs uppercase tracking-wider font-semibold block mb-1">Our Story</span>
+                <h2 id="about-heading" class="text-xl sm:text-2xl font-bold font-headline text-on-surface tracking-tight mb-3">
+                    About {{ store.name }}
+                </h2>
+                <div class="text-sm sm:text-base text-secondary leading-relaxed prose max-w-none">
+                    {{ store.description|linebreaks }}
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
 </div>
 {% endblock %}
