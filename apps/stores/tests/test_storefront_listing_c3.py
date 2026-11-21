@@ -829,9 +829,7 @@ class TestStorefrontListingC3:
         # Clear all link is present
         assert "Clear all" in content
 
-    def test_public_listing_no_unsupported_features(
-        self, client, store_alpha, merchant_alpha
-    ):
+    def test_public_listing_no_unsupported_features(self, client, store_alpha, merchant_alpha):
         """Verifies removal of WhatsApp assistance banner and e-commerce shopping features from C3."""
         make_published_product(
             merchant_alpha,
@@ -853,9 +851,7 @@ class TestStorefrontListingC3:
         assert "Customer Reviews" not in content
         assert "star" not in content.lower() or "material-symbols-outlined" in content
 
-    def test_public_listing_heading_uses_matching_count(
-        self, client, store_alpha, merchant_alpha
-    ):
+    def test_public_listing_heading_uses_matching_count(self, client, store_alpha, merchant_alpha):
         """Heading displays paginator.count matching filtered results, not total store count."""
         cat1 = Category.objects.create(
             merchant=merchant_alpha,
