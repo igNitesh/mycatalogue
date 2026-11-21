@@ -14,6 +14,7 @@ urlpatterns = [
         views_management.StorePublishToggleView.as_view(),
         name="toggle_publish",
     ),
-    # Public customer-facing storefront detail
+    # Public customer-facing storefront catalogue & homepage
+    path("<slug:slug>/products/", views.public_product_list, name="public_products"),
     path("<slug:slug>/", views.public_store_detail, name="public_detail"),
 ]

@@ -6,13 +6,13 @@ Separates query logic from business services and presentation views.
 import uuid
 
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Prefetch, Q, QuerySet
+from django.db.models import Case, Count, DecimalField, F, Prefetch, Q, QuerySet, Value, When
 
 from apps.merchants.choices import MerchantStatus
 from apps.merchants.models import Merchant
 from apps.stores.choices import StoreStatus
 
-from .choices import ProductStatus
+from .choices import AvailabilityMode, PriceDisplayMode, ProductStatus
 from .models import Category, Product, ProductImage
 
 
@@ -159,15 +159,21 @@ def get_category_for_merchant(
 
 ALLOWED_PUBLIC_PRODUCT_ORDERING = {
     "name": ("name",),
+    "name_asc": ("name",),
     "newest": ("-created_at",),
     "-created_at": ("-created_at",),
+    "price_asc": ("effective_public_price", "-created_at"),
+    "price_desc": ("-effective_public_price", "-created_at"),
 }
 
 
 def get_public_storefront_products(
     merchant: Merchant,
     category_slug: str | None = None,
-    ordering: str = "name",
+    ordering: str = "newest",
+    *,
+    search_query: str | None = None,
+    availability_mode: str | None = None,
 ) -> QuerySet[Product]:
     """
     Returns published products for customer-facing digital storefront browsing.
@@ -176,9 +182,12 @@ def get_public_storefront_products(
     1. Merchant status must be strictly ACTIVE.
     2. Store must exist, be in PUBLISHED status, and be publicly accessible.
     3. Product status must be strictly PUBLISHED.
-    4. Note: availability_mode=OUT_OF_STOCK (is_available=False) does NOT hide the product; it displays with an out-of-stock badge.
+    4. Availability mode OUT_OF_STOCK (is_available=False) does NOT hide the product; it displays with an out-of-stock badge.
     5. If category_slug is provided, the category must belong to this merchant and be active.
-    6. Ordering parameter is strictly whitelisted against ALLOWED_PUBLIC_PRODUCT_ORDERING.
+    6. Search query matches product name and SKU (capped to 100 characters).
+    7. Ordering parameter is strictly whitelisted against ALLOWED_PUBLIC_PRODUCT_ORDERING.
+    8. Contact-for-price privacy: SQL Case/When nulls price in order_by expressions with NULLS LAST.
+    9. Image fallback: Prefetches gallery ordered by -is_primary, display_order, created_at.
     """
     if ordering not in ALLOWED_PUBLIC_PRODUCT_ORDERING:
         allowed = ", ".join(sorted(ALLOWED_PUBLIC_PRODUCT_ORDERING.keys()))
@@ -192,17 +201,28 @@ def get_public_storefront_products(
     if not store or store.status != StoreStatus.PUBLISHED or not store.is_publicly_accessible:
         return Product.objects.none()
 
-    order_by_fields = ALLOWED_PUBLIC_PRODUCT_ORDERING[ordering]
+    # Effective price expression for CONTACT_FOR_PRICE privacy
+    effective_price_expr = Case(
+        When(
+            price_display_mode=PriceDisplayMode.CONTACT_FOR_PRICE,
+            then=Value(None),
+        ),
+        default=F("price"),
+        output_field=DecimalField(max_digits=12, decimal_places=2, null=True),
+    )
 
     qs = (
         Product.objects.filter(
             merchant=merchant,
             status=ProductStatus.PUBLISHED,
         )
+        .annotate(effective_public_price=effective_price_expr)
         .prefetch_related(
             Prefetch(
                 "images",
-                queryset=ProductImage.objects.filter(is_primary=True),
+                queryset=ProductImage.objects.order_by(
+                    "-is_primary", "display_order", "created_at"
+                ),
                 to_attr="primary_images",
             ),
             Prefetch(
@@ -210,14 +230,20 @@ def get_public_storefront_products(
                 queryset=Category.objects.filter(is_active=True),
             ),
         )
-        .order_by(*order_by_fields)
     )
 
+    # 1. Search filter (Name or SKU, truncated to 100 chars)
+    if search_query:
+        clean_q = search_query.strip()[:100]
+        if clean_q:
+            qs = qs.filter(Q(name__icontains=clean_q) | Q(sku__icontains=clean_q))
+
+    # 2. Category filter
     if category_slug:
         # Category must belong to this merchant and be active
         category = Category.objects.filter(
             merchant=merchant,
-            slug=category_slug.lower(),
+            slug=category_slug.strip().lower(),
             is_active=True,
         ).first()
 
@@ -225,5 +251,20 @@ def get_public_storefront_products(
             return Product.objects.none()
 
         qs = qs.filter(categories=category)
+
+    # 3. Availability filter
+    if availability_mode:
+        clean_avail = availability_mode.strip().upper()
+        if clean_avail in AvailabilityMode.values:
+            qs = qs.filter(availability_mode=clean_avail)
+
+    # 4. Ordering with NULLS LAST for price sorting
+    if ordering == "price_asc":
+        qs = qs.order_by(F("effective_public_price").asc(nulls_last=True), "-created_at")
+    elif ordering == "price_desc":
+        qs = qs.order_by(F("effective_public_price").desc(nulls_last=True), "-created_at")
+    else:
+        order_by_fields = ALLOWED_PUBLIC_PRODUCT_ORDERING[ordering]
+        qs = qs.order_by(*order_by_fields)
 
     return qs

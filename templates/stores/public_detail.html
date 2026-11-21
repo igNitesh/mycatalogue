@@ -56,7 +56,7 @@
 
                 <!-- Conversion & Contact Actions -->
                 <div class="flex flex-wrap items-center gap-3 pt-2">
-                    <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-container-lowest text-on-surface font-headline font-bold text-xs sm:text-sm shadow-md hover:bg-surface-container transition-all focus:outline-none focus:ring-2 focus:ring-white">
+                    <a href="{% if store.slug %}{% url 'stores:public_products' slug=store.slug %}{% else %}#{% endif %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-container-lowest text-on-surface font-headline font-bold text-xs sm:text-sm shadow-md hover:bg-surface-container transition-all focus:outline-none focus:ring-2 focus:ring-white">
                         <span class="material-symbols-outlined text-[18px] text-primary" aria-hidden="true">view_carousel</span>
                         <span>Browse All Products</span>
                     </a>
@@ -94,18 +94,6 @@
                             </p>
                         </div>
                     </div>
-
-                    <!-- Store Opening & Closing Hours (Stitch Reference) -->
-                    <div class="bg-surface-container-low rounded-xl p-3 flex items-center justify-between text-on-surface text-xs">
-                        <span class="flex items-center gap-1.5 text-secondary">
-                            <span class="material-symbols-outlined text-[16px] text-outline" aria-hidden="true">schedule</span>
-                            <span class="font-medium">10:00 AM – 8:30 PM</span>
-                        </span>
-                        <span class="text-tertiary font-semibold flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
-                            <span>Open Today</span>
-                        </span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -136,7 +124,7 @@
             <!-- Responsive Category Grid (Horizontal snap scroll on mobile, grid on desktop) -->
             <div class="flex overflow-x-auto gap-3 pb-2 no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4 lg:gap-5 sm:pb-0">
                 {% for category in categories %}
-                    <a href="{% if store.slug %}/s/{{ store.slug }}/products/?category={{ category.slug }}{% else %}#{% endif %}" class="snap-start shrink-0 w-36 sm:w-auto group flex flex-col rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 overflow-hidden transition-all shadow-xs hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary">
+                    <a href="{% if store.slug %}{% url 'stores:public_products' slug=store.slug %}?category={{ category.slug }}{% else %}#{% endif %}" class="snap-start shrink-0 w-36 sm:w-auto group flex flex-col rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/50 overflow-hidden transition-all shadow-xs hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary">
                         <div class="h-40 sm:h-48 lg:h-52 w-full bg-surface-container-low overflow-hidden relative">
                             {% if category.image %}
                                 <img src="{{ category.image.url }}" alt="{{ category.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
@@ -176,7 +164,7 @@
                 </p>
             </div>
             <div>
-                <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:text-primary-container transition-colors focus:outline-none focus:underline">
+                <a href="{% if store.slug %}{% url 'stores:public_products' slug=store.slug %}{% else %}#{% endif %}" class="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-primary hover:text-primary-container transition-colors focus:outline-none focus:underline">
                     <span>View All</span>
                     <span class="material-symbols-outlined text-[16px]" aria-hidden="true">chevron_right</span>
                 </a>
@@ -295,7 +283,7 @@
                 </div>
             </div>
             <div class="shrink-0">
-                <a href="{% if store.slug %}/s/{{ store.slug }}/products/{% else %}#{% endif %}" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-headline font-bold text-xs sm:text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary">
+                <a href="{% if store.slug %}{% url 'stores:public_products' slug=store.slug %}{% else %}#{% endif %}" class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-headline font-bold text-xs sm:text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary">
                     <span class="material-symbols-outlined text-[20px]" aria-hidden="true">storefront</span>
                     <span>View All Products</span>
                 </a>

@@ -1,0 +1,55 @@
+<article class="flex flex-col bg-surface-container-lowest rounded-xl sm:rounded-2xl overflow-hidden border border-outline-variant/30 shadow-xs hover:shadow-md transition-all justify-between" data-product-id="{{ product.id }}" data-availability="{{ product.availability_mode|lower }}" {% if product.sku %}data-sku="{{ product.sku }}"{% endif %}>
+    <!-- 3:4 Portrait Image Container with Deterministic Single Fallback -->
+    <div class="relative w-full aspect-[3/4] bg-surface-container-low overflow-hidden">
+        {% if product.primary_images %}
+            <img src="{{ product.primary_images.0.image.url }}" alt="{{ product.name }}" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+        {% else %}
+            <!-- Accessible Neutral Fallback Placeholder -->
+            <div class="w-full h-full flex flex-col items-center justify-center text-outline/40 bg-surface-container-low" aria-hidden="true">
+                <span class="material-symbols-outlined text-4xl">inventory_2</span>
+                <span class="text-[10px] text-outline font-medium mt-1">No Image Available</span>
+            </div>
+        {% endif %}
+
+        <!-- Restrained Availability Indicator (Optional / Subtle) -->
+        <div class="absolute top-2 left-2">
+            {% if product.availability_mode == "IN_STOCK" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-lowest/90 text-tertiary font-badge text-[10px] font-bold shadow-xs backdrop-blur-sm border border-tertiary/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                    <span>In Stock</span>
+                </span>
+            {% elif product.availability_mode == "MADE_TO_ORDER" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50/95 text-amber-800 font-badge text-[10px] font-bold shadow-xs backdrop-blur-sm border border-amber-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    <span>Made to Order</span>
+                </span>
+            {% elif product.availability_mode == "OUT_OF_STOCK" %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100/95 text-slate-700 font-badge text-[10px] font-bold shadow-xs backdrop-blur-sm border border-slate-300">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                    <span>Out of Stock</span>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Metadata Block (Unlinked Headings - Product Detail Navigation Deferred to Stage C4) -->
+    <div class="p-2.5 sm:p-3 flex flex-col flex-1 justify-between gap-1.5">
+        <div>
+            <h2 class="font-headline font-bold text-xs sm:text-sm text-on-surface line-clamp-2" title="{{ product.name }}">
+                {{ product.name }}
+            </h2>
+        </div>
+
+        <!-- Pricing Block (Strict Privacy Enforcement) -->
+        <div class="pt-1.5 border-t border-outline-variant/15 flex items-baseline justify-between gap-1 flex-wrap">
+            {% if product.price_display_mode == "CONTACT_FOR_PRICE" or not product.price %}
+                <span class="font-headline font-bold text-xs sm:text-sm text-primary">Contact for Price</span>
+            {% else %}
+                <span class="font-bold text-xs sm:text-sm text-on-surface font-price">
+                    ₹{{ product.price|floatformat:0 }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Note: Product detail navigation is deferred to Stage C4 -->
+</article>

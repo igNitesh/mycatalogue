@@ -132,12 +132,12 @@ class TestStorefrontHomepageC2:
         assert 'aria-label="Search catalogue"' in content
         assert 'aria-label="Customer Profile"' in content
 
-        # 6. Factual Store Profile Card with Owner & Timing Details (Zero Fake "Verified" Badges)
+        # 6. Factual Store Profile Card with Owner Details (Zero Fake Badges & Zero Fake Hours)
         assert "Store Profile" in content
         assert "Active Storefront" in content
         assert "Proprietor &amp; Store Owner" in content or "Proprietor" in content
-        assert "10:00 AM – 8:30 PM" in content
-        assert "Open Today" in content
+        assert "10:00 AM – 8:30 PM" not in content
+        assert "Open Today" not in content
         assert "Verified Store" not in content
         assert "Verified Merchant" not in content
 
